@@ -15,6 +15,7 @@ const productSchema = new mongoose.Schema({
   accent: { type: String, required: true },
   features: [{ type: String }],
   badge: { type: String },
+  salesCount: { type: Number, default: 0, min: 0 },
 }, { timestamps: true });
 
 export const Product = mongoose.model('Product', productSchema);
