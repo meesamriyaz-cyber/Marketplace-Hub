@@ -35,13 +35,11 @@ router.post('/orders', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Cart is empty' });
   }
 
-  const productIds = cart.items
-    .map((item) => {
-      const pid = item.productId;
-      if (!pid) return null;
-      return typeof pid === 'string' ? pid : pid._id?.toString?.() || pid.toString();
-    })
-    .filter(Boolean);
+  const productIds = cart.items.map((item) => {
+    const pid = item.productId;
+    if (!pid) return null;
+    return typeof pid === 'string' ? pid : pid._id?.toString?.() || pid.toString();
+  }).filter(Boolean);
 
   const products = await Product.find({ _id: { $in: productIds } }).lean();
   const productMap = new Map(products.map((p) => [p._id.toString(), p]));
@@ -59,12 +57,7 @@ router.post('/orders', authenticate, async (req, res) => {
       const product = productMap.get(id);
       const price = product.price;
       total += price * item.quantity;
-      return {
-        productId: id,
-        name: product.name,
-        price,
-        quantity: item.quantity,
-      };
+      return { productId: id, name: product.name, price, quantity: item.quantity };
     });
 
   if (items.length === 0) {
@@ -76,7 +69,7 @@ router.post('/orders', authenticate, async (req, res) => {
     items,
     customerEmail: req.user.email,
     total,
-    currency: 'usd',
+    currency: 'INR',
     status: 'pending',
   });
 
@@ -85,10 +78,7 @@ router.post('/orders', authenticate, async (req, res) => {
   return res.status(201).json({
     _id: order._id.toString(),
     userId: order.userId.toString(),
-    items: order.items.map((item) => ({
-      ...item,
-      productId: item.productId?.toString?.() || item.productId,
-    })),
+    items: order.items.map((item) => ({ ...item, productId: item.productId?.toString?.() || item.productId })),
     customerEmail: order.customerEmail,
     total: order.total,
     currency: order.currency,
@@ -100,21 +90,14 @@ router.post('/orders', authenticate, async (req, res) => {
 
 router.get('/orders/:orderId', authenticate, async (req, res) => {
   const order = await Order.findById(req.params.orderId).lean();
-  if (!order) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-  if (order.userId?.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.userId?.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Forbidden' });
 
   return res.json({
     ...order,
     _id: order._id.toString(),
     userId: order.userId?.toString(),
-    items: (order.items || []).map((item) => ({
-      ...item,
-      productId: item.productId?.toString?.() || item.productId,
-    })),
+    items: (order.items || []).map((item) => ({ ...item, productId: item.productId?.toString?.() || item.productId })),
   });
 });
 
