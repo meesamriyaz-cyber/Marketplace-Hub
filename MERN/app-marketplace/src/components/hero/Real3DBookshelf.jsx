@@ -13,25 +13,25 @@ function formatPrice(value) {
 function CoverArtwork({ product, accent, active }) {
   const art = product.art;
   const isImage = typeof art === 'string' && /^(https?:\/\/|data:image\/)/i.test(art);
-  if (!isImage) {
-    return (
-      <group position={[0, 0.02, 0.235]}>
-        <Text position={[0, 0.32, 0]} maxWidth={1.45} fontSize={0.58} color="#10151c" anchorX="center" anchorY="middle" fontWeight="bold">
-          {product.initials || 'APP'}
-        </Text>
-        <mesh position={[0, -0.43, -0.01]}>
-          <circleGeometry args={[0.22, 32]} />
-          <meshBasicMaterial color={accent} />
-        </mesh>
-      </group>
-    );
-  }
 
-  return <TexturedArtwork url={art} active={active} />;
+  if (isImage) return <TexturedArtwork url={art} active={active} />;
+
+  return (
+    <group position={[0, 0.34, 0.318]}>
+      <mesh>
+        <circleGeometry args={[0.31, 48]} />
+        <meshStandardMaterial color={accent} metalness={0.2} roughness={0.3} emissive={accent} emissiveIntensity={active ? 0.18 : 0.04} />
+      </mesh>
+      <Text position={[0, -0.01, 0.025]} fontSize={0.22} color="#0a0d12" anchorX="center" anchorY="middle" fontWeight="bold">
+        {product.initials || 'APP'}
+      </Text>
+    </group>
+  );
 }
 
 function TexturedArtwork({ url, active }) {
   const texture = useTexture(url);
+
   useEffect(() => {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 8;
@@ -39,23 +39,114 @@ function TexturedArtwork({ url, active }) {
   }, [texture]);
 
   return (
-    <mesh position={[0, 0.08, 0.235]} scale={[1, 1.38, 1]}>
-      <planeGeometry args={[1.76, 1.86]} />
-      <meshBasicMaterial map={texture} transparent opacity={active ? 1 : 0.94} />
+    <mesh position={[0, 0.35, 0.318]} scale={[1, 1, 1]}>
+      <planeGeometry args={[1.62, 1.52]} />
+      <meshBasicMaterial map={texture} transparent opacity={active ? 1 : 0.96} />
     </mesh>
   );
 }
 
-function BookPages() {
+function FrontCover({ product, accent, active }) {
   return (
-    <group position={[0.99, 0, 0]}>
-      <RoundedBox args={[0.12, 3.05, 0.34]} radius={0.035} smoothness={3}>
-        <meshStandardMaterial color="#d8d0c1" metalness={0.04} roughness={0.62} />
+    <group>
+      <RoundedBox position={[0, 0, 0.265]} args={[1.78, 2.94, 0.055]} radius={0.075} smoothness={5}>
+        <meshStandardMaterial color="#121820" metalness={0.18} roughness={0.3} emissive={accent} emissiveIntensity={active ? 0.08 : 0.015} />
       </RoundedBox>
-      {[0.12, 0.02, -0.08].map((x) => (
-        <mesh key={x} position={[x, 0, 0.18]} rotation={[Math.PI / 2, 0, 0]}>
-          <boxGeometry args={[0.035, 2.82, 0.018]} />
-          <meshStandardMaterial color="#b9ae9c" roughness={0.72} />
+
+      <mesh position={[0, 1.27, 0.305]}>
+        <boxGeometry args={[1.62, 0.018, 0.012]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.55} />
+      </mesh>
+
+      <CoverArtwork product={product} accent={accent} active={active} />
+
+      <Text position={[0, -0.69, 0.32]} maxWidth={1.46} fontSize={0.235} lineHeight={1.05} color="#f7f3eb" anchorX="center" anchorY="middle" textAlign="center">
+        {product.name || 'Application'}
+      </Text>
+      <Text position={[0, -1.03, 0.32]} maxWidth={1.38} fontSize={0.095} lineHeight={1.3} color="#aeb5bf" anchorX="center" anchorY="middle" textAlign="center">
+        {product.tagline || product.category || 'Business application'}
+      </Text>
+      <Text position={[0, -1.31, 0.32]} fontSize={0.14} color={accent} anchorX="center" anchorY="middle">
+        {formatPrice(product.price)}
+      </Text>
+
+      <Text position={[-0.58, 1.03, 0.32]} fontSize={0.075} color="#8f98a5" anchorX="center" anchorY="middle">
+        {product.category || 'APP'}
+      </Text>
+    </group>
+  );
+}
+
+function Spine({ product, accent }) {
+  return (
+    <group position={[-1.025, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <RoundedBox args={[0.42, 3.02, 0.055]} radius={0.035} smoothness={3}>
+        <meshStandardMaterial color="#0c1118" metalness={0.65} roughness={0.28} />
+      </RoundedBox>
+      <mesh position={[0, 1.34, 0.035]}>
+        <boxGeometry args={[0.25, 0.022, 0.012]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} />
+      </mesh>
+      <Text position={[0, 0.05, 0.038]} maxWidth={2.35} fontSize={0.12} color="#f2eee5" anchorX="center" anchorY="middle" rotation={[0, 0, Math.PI / 2]} textAlign="center">
+        {product.name || 'APP'}
+      </Text>
+      <Text position={[0, -1.08, 0.038]} fontSize={0.065} color={accent} anchorX="center" anchorY="middle" rotation={[0, 0, Math.PI / 2]}>
+        CUTTING-EDGE
+      </Text>
+    </group>
+  );
+}
+
+function BackCover({ product, accent }) {
+  const features = Array.isArray(product.features) ? product.features.slice(0, 3) : [];
+
+  return (
+    <group position={[0, 0, -0.265]} rotation={[0, Math.PI, 0]}>
+      <RoundedBox args={[1.78, 2.94, 0.055]} radius={0.075} smoothness={5}>
+        <meshStandardMaterial color="#0d131a" metalness={0.2} roughness={0.34} />
+      </RoundedBox>
+
+      <Text position={[0, 1.08, 0.035]} maxWidth={1.4} fontSize={0.19} color="#f5f0e8" anchorX="center" anchorY="middle" textAlign="center">
+        {product.name || 'Application'}
+      </Text>
+      <mesh position={[0, 0.84, 0.04]}>
+        <boxGeometry args={[1.25, 0.018, 0.012]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.45} />
+      </mesh>
+
+      <Text position={[0, 0.55, 0.04]} maxWidth={1.4} fontSize={0.085} lineHeight={1.45} color="#aeb5bf" anchorX="center" anchorY="middle" textAlign="center">
+        {product.description || product.tagline || 'A focused business application built to make work simpler.'}
+      </Text>
+
+      {features.map((feature, index) => (
+        <group key={`${feature}-${index}`} position={[-0.61, 0.02 - index * 0.31, 0.04]}>
+          <mesh>
+            <circleGeometry args={[0.055, 24]} />
+            <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.35} />
+          </mesh>
+          <Text position={[0.14, 0, 0]} maxWidth={1.05} fontSize={0.075} lineHeight={1.2} color="#d9d5ce" anchorX="left" anchorY="middle">
+            {feature}
+          </Text>
+        </group>
+      ))}
+
+      <Text position={[0, -1.14, 0.04]} maxWidth={1.3} fontSize={0.075} color="#737c88" anchorX="center" anchorY="middle" textAlign="center">
+        {product.category || 'Business software'} · {Number(product.rating || 0).toFixed(1)} ★
+      </Text>
+    </group>
+  );
+}
+
+function PageBlock() {
+  return (
+    <group position={[1.02, 0, 0]}>
+      <RoundedBox args={[0.13, 3.02, 0.34]} radius={0.035} smoothness={3}>
+        <meshStandardMaterial color="#ddd5c6" metalness={0.03} roughness={0.58} />
+      </RoundedBox>
+      {[-0.09, 0, 0.09].map((x) => (
+        <mesh key={x} position={[x, 0, 0.18]}>
+          <boxGeometry args={[0.012, 2.82, 0.02]} />
+          <meshStandardMaterial color="#b9ae9d" roughness={0.72} />
         </mesh>
       ))}
     </group>
@@ -68,15 +159,16 @@ function AppCase({ product, index, active, onSelect }) {
   const accent = product.accent || ACCENTS[index % ACCENTS.length];
   const selected = active || hovered;
   const targetX = [-4.85, -2.42, 0, 2.42, 4.85][index] ?? (index - 2) * 2.42;
-  const targetZ = active ? 0.85 : index === 2 ? 0.15 : 0;
+  const targetZ = active ? 0.9 : index === 2 ? 0.12 : 0;
   const targetY = active ? 0.34 : 0;
+  const targetRotation = selected ? (index - 2) * -0.035 : (index - 2) * -0.09;
 
   useFrame((_, delta) => {
     if (!group.current) return;
     group.current.position.x = THREE.MathUtils.damp(group.current.position.x, targetX, 5, delta);
     group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetY, 5, delta);
     group.current.position.z = THREE.MathUtils.damp(group.current.position.z, targetZ, 5, delta);
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, selected ? (index - 2) * -0.035 : (index - 2) * -0.09, 5, delta);
+    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, targetRotation, 5, delta);
     const scale = selected ? 1.08 : 1;
     group.current.scale.x = THREE.MathUtils.damp(group.current.scale.x, scale, 6, delta);
     group.current.scale.y = THREE.MathUtils.damp(group.current.scale.y, scale, 6, delta);
@@ -93,40 +185,22 @@ function AppCase({ product, index, active, onSelect }) {
       castShadow
       receiveShadow
     >
-      <RoundedBox args={[2.0, 3.2, 0.48]} radius={0.11} smoothness={6}>
-        <meshStandardMaterial color="#11161e" metalness={0.72} roughness={0.24} />
+      <RoundedBox args={[2.0, 3.2, 0.5]} radius={0.11} smoothness={6}>
+        <meshStandardMaterial color="#10161e" metalness={0.76} roughness={0.23} />
       </RoundedBox>
 
-      <RoundedBox position={[0, 0.02, 0.265]} args={[1.78, 2.94, 0.06]} radius={0.075} smoothness={5}>
-        <meshStandardMaterial color={accent} metalness={0.08} roughness={0.32} emissive={accent} emissiveIntensity={selected ? 0.14 : 0.025} />
-      </RoundedBox>
+      <FrontCover product={product} accent={accent} active={selected} />
+      <Spine product={product} accent={accent} />
+      <BackCover product={product} accent={accent} />
+      <PageBlock />
 
-      <CoverArtwork product={product} accent={accent} active={selected} />
-
-      <RoundedBox position={[-0.86, 0, 0.28]} args={[0.045, 2.86, 0.035]} radius={0.012} smoothness={2}>
-        <meshStandardMaterial color="#f0eadf" roughness={0.45} />
-      </RoundedBox>
-      <BookPages />
-
-      <Text position={[0, -1.05, 0.31]} maxWidth={1.42} fontSize={0.16} color="#f5f0e8" anchorX="center" anchorY="middle" textAlign="center">
-        {product.name || 'App'}
-      </Text>
-      <Text position={[0, -1.29, 0.31]} maxWidth={1.35} fontSize={0.11} color="#d6d1c9" anchorX="center" anchorY="middle" textAlign="center">
-        {product.tagline || product.category || 'Business application'}
-      </Text>
-      <Text position={[0, -1.48, 0.31]} fontSize={0.12} color={accent} anchorX="center" anchorY="middle">
-        {formatPrice(product.price)}
-      </Text>
-
-      <group position={[0, 1.43, 0.33]}>
-        <mesh>
-          <boxGeometry args={[1.25, 0.045, 0.025]} />
-          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} />
-        </mesh>
-      </group>
+      <mesh position={[0, 1.54, 0.31]}>
+        <boxGeometry args={[1.34, 0.025, 0.025]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.55} />
+      </mesh>
 
       {product.badge && (
-        <Html position={[0.56, 1.18, 0.4]} center distanceFactor={6}>
+        <Html position={[0.57, 1.18, 0.39]} center distanceFactor={6}>
           <div className="pointer-events-none whitespace-nowrap rounded-full border border-white/15 bg-black/75 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.15em] text-white shadow-xl backdrop-blur-md">
             {product.badge}
           </div>
@@ -262,7 +336,7 @@ export default function Real3DBookshelf({ products = [], onSelect }) {
             <p className="mt-6 max-w-md text-base leading-7 text-neutral-400 sm:text-lg">Discover business tools that earn their shelf space.</p>
             <div className="mt-7 flex items-center gap-3 text-[10px] uppercase tracking-[.16em] text-neutral-500">
               <span className="size-1.5 rounded-full bg-[#e9c878] shadow-[0_0_14px_#e9c878]" />
-              Hover · drag · explore
+              Hover · explore · choose
             </div>
           </div>
 
