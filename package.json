@@ -1,0 +1,33 @@
+{
+  "name": "marketplace-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "For selling web apps",
+  "homepage": "https://github.com/meesamriyaz-cyber/Marketplace-Hub#readme",
+  "bugs": {
+    "url": "https://github.com/meesamriyaz-cyber/Marketplace-Hub/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meesamriyaz-cyber/Marketplace-Hub.git"
+  },
+  "license": "ISC",
+  "author": "Cutting Edge Enterprises",
+  "type": "module",
+  "main": "MERN/api-server/src/index.js",
+  "workspaces": [
+    "MERN/api-server",
+    "MERN/app-marketplace"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=MERN/api-server",
+    "dev:client": "npm run dev --workspace=MERN/app-marketplace",
+    "build": "npm run build --workspace=MERN/app-marketplace",
+    "install:all": "npm install",
+    "start": "npm run build --workspace=MERN/app-marketplace && npm run start --workspace=MERN/api-server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
