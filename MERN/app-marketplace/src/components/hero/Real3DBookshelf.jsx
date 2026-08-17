@@ -63,6 +63,7 @@ function Shelf({ width = 11.7, light }) {
 
 function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
   const group = useRef();
+  const introStarted = useRef(false);
   const count = products.length;
   const next = () => setActiveIndex((v) => (v + 1) % count);
   const previous = () => setActiveIndex((v) => (v - 1 + count) % count);
@@ -75,8 +76,23 @@ function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
 
   useFrame((state, d) => {
     if (!group.current) return;
+
+    // Bring the entire showroom in gently on first render instead of
+    // dropping the shelf into place abruptly. The animation settles into
+    // the same pointer-responsive showroom motion used after load.
+    const elapsed = state.clock.getElapsedTime();
+    const intro = THREE.MathUtils.clamp(elapsed / 1.15, 0, 1);
+    const eased = 1 - Math.pow(1 - intro, 3);
+    const targetY = 0;
+    const targetScale = 1;
+    const introY = THREE.MathUtils.lerp(-0.72, targetY, eased);
+    const introScale = THREE.MathUtils.lerp(0.86, targetScale, eased);
+
+    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, introY, 7, d);
+    group.current.scale.setScalar(THREE.MathUtils.damp(group.current.scale.x, introScale, 7, d));
     group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, state.pointer.x * .035, 2.5, d);
     group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, -state.pointer.y * .025, 2.5, d);
+    introStarted.current = true;
   });
 
   const visible = useMemo(() => count ? [-1, 0, 1].map((offset, slot) => {
@@ -86,7 +102,7 @@ function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
 
   if (!count) return null;
   return <>
-    <group ref={group}>{visible.map(({ product, index, slot }) => <AppCase key={`${product._id || product.id || product.name}-${index}`} product={product} slot={slot} active={index === activeIndex} onSelect={onSelect} light={light} />)}<Shelf light={light} /></group>
+    <group ref={group}><group>{visible.map(({ product, index, slot }) => <AppCase key={`${product._id || product.id || product.name}-${index}`} product={product} slot={slot} active={index === activeIndex} onSelect={onSelect} light={light} />)}<Shelf light={light} /></group></group>
     <ambientLight intensity={light ? 1.45 : 1.1} /><directionalLight position={[3,6,5]} intensity={light ? 2.5 : 2.2} castShadow /><pointLight position={[-5,2,4]} intensity={light ? 10 : 18} distance={16} color="#d9a83f" /><pointLight position={[5,1,2]} intensity={light ? 6 : 10} distance={14} color="#6688c4" />
     <Environment preset="studio" />
     <ContactShadows position={[0,-1.95,0]} opacity={light ? .28 : .5} scale={17} blur={2.6} far={8} />
