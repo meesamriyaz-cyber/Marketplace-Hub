@@ -29,7 +29,7 @@ export default function Navbar({ onToggleTheme, theme }) {
   const isHome = location === '/';
 
   return (
-    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 bg-background backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-4 sm:px-8 lg:px-12">
         <Link to="/" className="flex items-center gap-2.5" aria-label="Cutting Edge Apps home">
           <div className="relative flex size-8 items-center justify-center rounded-full border border-[#d8b985]/70">
