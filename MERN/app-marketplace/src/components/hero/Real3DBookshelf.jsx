@@ -13,7 +13,7 @@ function Artwork({ product, accent, light }) {
     useEffect(() => { texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8; texture.needsUpdate = true; }, [texture]);
     return <mesh position={[0, .42, .38]}><planeGeometry args={[1.9, 1.7]} /><meshBasicMaterial map={texture} /></mesh>;
   }
-  return <group position={[0, .42, .38]}><mesh><circleGeometry args={[.36, 48]} /><meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={.18} metalness={.28} roughness={.25} /></mesh><Text position={[0,0,.025]} fontSize={.25} color={light ? '#ffffff' : '#ffffff'} anchorX="center" anchorY="middle" fontWeight="bold">{product.initials || 'APP'}</Text></group>;
+  return <group position={[0, .42, .38]}><mesh><circleGeometry args={[.36, 48]} /><meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={.18} metalness={.28} roughness={.25} /></mesh><Text position={[0,0,.025]} fontSize={.25} color="#ffffff" anchorX="center" anchorY="middle" fontWeight="bold">{product.initials || 'APP'}</Text></group>;
 }
 
 function AppCase({ product, slot, active, onSelect, light }) {
@@ -90,9 +90,9 @@ function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
     <ambientLight intensity={light ? 1.45 : 1.1} /><directionalLight position={[3,6,5]} intensity={light ? 2.5 : 2.2} castShadow /><pointLight position={[-5,2,4]} intensity={light ? 10 : 18} distance={16} color="#d9a83f" /><pointLight position={[5,1,2]} intensity={light ? 6 : 10} distance={14} color="#6688c4" />
     <Environment preset="studio" />
     <ContactShadows position={[0,-1.95,0]} opacity={light ? .28 : .5} scale={17} blur={2.6} far={8} />
-    <group position={[0,-2.62,.4]}>
-      <Text fontSize={.29} color={light ? '#2b2824' : '#f2eee6'} anchorX="center" anchorY="middle">BROWSE THE COLLECTION</Text>
-      <Text position={[0,-.42,0]} fontSize={.26} color={light ? '#8b5f14' : '#e9c878'} anchorX="center" anchorY="middle">→</Text>
+    <group position={[0,-2.78,.4]}>
+      <Text fontSize={.43} color={light ? '#2b2824' : '#f2eee6'} anchorX="center" anchorY="middle" letterSpacing={.04}>BROWSE THE COLLECTION</Text>
+      <Text position={[0,-.56,0]} fontSize={.48} color={light ? '#8b5f14' : '#e9c878'} anchorX="center" anchorY="middle">←  →</Text>
     </group>
   </>;
 }
