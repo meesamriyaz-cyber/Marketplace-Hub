@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, Environment, RoundedBox, Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
-const ACCENTS = ['#e9c878', '#a9d0b8', '#ee9d83', '#9fb8e8', '#c7a8e8'];
+const ACCENTS = ['#d9a83f', '#5d9b79', '#d4775e', '#6688c4', '#9270b7'];
 const price = (v) => v === undefined || v === null || v === '' ? '' : `₹${Number(v).toLocaleString('en-IN')}`;
 const accentFor = (p) => p.accent || ACCENTS[(p._id || p.id || p.name || '').length % ACCENTS.length];
 
@@ -13,7 +13,7 @@ function Artwork({ product, accent, light }) {
     useEffect(() => { texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8; texture.needsUpdate = true; }, [texture]);
     return <mesh position={[0, .42, .38]}><planeGeometry args={[1.9, 1.7]} /><meshBasicMaterial map={texture} /></mesh>;
   }
-  return <group position={[0, .42, .38]}><mesh><circleGeometry args={[.36, 48]} /><meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={.12} metalness={.2} roughness={.3} /></mesh><Text position={[0,0,.025]} fontSize={.25} color={light ? '#302b24' : '#090d12'} anchorX="center" anchorY="middle" fontWeight="bold">{product.initials || 'APP'}</Text></group>;
+  return <group position={[0, .42, .38]}><mesh><circleGeometry args={[.36, 48]} /><meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={.12} metalness={.2} roughness={.3} /></mesh><Text position={[0,0,.025]} fontSize={.25} color={light ? '#fffaf0' : '#090d12'} anchorX="center" anchorY="middle" fontWeight="bold">{product.initials || 'APP'}</Text></group>;
 }
 
 function AppCase({ product, slot, active, onSelect, light }) {
@@ -24,13 +24,12 @@ function AppCase({ product, slot, active, onSelect, light }) {
   const x = [-3.7, 0, 3.7][slot];
   const z = active ? .82 : 0;
   const y = active ? .22 : 0;
-  // Keep the light-mode cards deliberately darker than the warm page background for strong visual contrast.
-  const frame = light ? '#292825' : '#10161e';
-  const inner = light ? '#f3eee5' : '#121820';
-  const edge = light ? '#b9aa96' : '#ddd5c6';
-  const title = light ? '#28241f' : '#f7f3eb';
-  const muted = light ? '#70675d' : '#aeb5bf';
-  const quiet = light ? '#82776a' : '#8f98a5';
+  const frame = light ? '#25231f' : '#10161e';
+  const inner = light ? '#3b3934' : '#121820';
+  const edge = light ? '#bdaF9a' : '#ddd5c6';
+  const title = light ? '#fffaf0' : '#f7f3eb';
+  const muted = light ? '#d7cec1' : '#aeb5bf';
+  const quiet = light ? '#e0d5c6' : '#8f98a5';
 
   useFrame((_, d) => {
     if (!ref.current) return;
@@ -53,13 +52,13 @@ function AppCase({ product, slot, active, onSelect, light }) {
     <Text position={[0,-1.15,.36]} maxWidth={1.6} fontSize={.105} color={muted} anchorX="center" anchorY="middle" textAlign="center">{product.tagline || product.category || 'Business application'}</Text>
     <Text position={[0,-1.47,.36]} fontSize={.16} color={accent} anchorX="center" anchorY="middle">{price(product.price)}</Text>
     <Text position={[-.68,1.18,.36]} fontSize={.085} color={quiet} anchorX="center" anchorY="middle">{product.category || 'APP'}</Text>
-    <group position={[-1.17,0,0]} rotation={[0,-Math.PI/2,0]}><RoundedBox args={[.46,3.42,.06]} radius={.035} smoothness={3}><meshStandardMaterial color={light ? '#383531' : '#0c1118'} metalness={.55} roughness={.32} /></RoundedBox><Text position={[0,.05,.04]} maxWidth={2.5} fontSize={.135} color={light ? '#f2eadf' : title} anchorX="center" anchorY="middle" rotation={[0,0,Math.PI/2]}>{product.name || 'APP'}</Text></group>
+    <group position={[-1.17,0,0]} rotation={[0,-Math.PI/2,0]}><RoundedBox args={[.46,3.42,.06]} radius={.035} smoothness={3}><meshStandardMaterial color={light ? '#302d28' : '#0c1118'} metalness={.55} roughness={.32} /></RoundedBox><Text position={[0,.05,.04]} maxWidth={2.5} fontSize={.135} color={light ? '#f2eadf' : title} anchorX="center" anchorY="middle" rotation={[0,0,Math.PI/2]}>{product.name || 'APP'}</Text></group>
     <group position={[1.17,0,0]}><RoundedBox args={[.15,3.42,.38]} radius={.035} smoothness={3}><meshStandardMaterial color={edge} roughness={.58} /></RoundedBox></group>
   </group>;
 }
 
 function Shelf({ width = 11.7, light }) {
-  return <group position={[0,-1.82,0]}><RoundedBox args={[width,.3,1.85]} radius={.055} smoothness={5} castShadow receiveShadow><meshStandardMaterial color={light ? '#b9a58e' : '#0c0d10'} metalness={light ? .48 : .86} roughness={light ? .38 : .22} /></RoundedBox><RoundedBox position={[0,-.25,-.12]} args={[width-.24,.13,1.52]} radius={.035}><meshStandardMaterial color={light ? '#806b58' : '#38261a'} roughness={.58} /></RoundedBox><mesh position={[0,.18,.7]}><boxGeometry args={[width-.3,.04,.05]} /><meshStandardMaterial color="#e9c878" emissive="#e9c878" emissiveIntensity={.45} /></mesh><mesh position={[0,-.09,.72]}><boxGeometry args={[width-.46,.02,.02]} /><meshStandardMaterial color={light ? '#fff8e8' : '#fff2c7'} emissive="#e9c878" emissiveIntensity={.9} /></mesh></group>;
+  return <group position={[0,-1.82,0]}><RoundedBox args={[width,.3,1.85]} radius={.055} smoothness={5} castShadow receiveShadow><meshStandardMaterial color={light ? '#9b8269' : '#0c0d10'} metalness={light ? .48 : .86} roughness={light ? .38 : .22} /></RoundedBox><RoundedBox position={[0,-.25,-.12]} args={[width-.24,.13,1.52]} radius={.035}><meshStandardMaterial color={light ? '#634d3b' : '#38261a'} roughness={.58} /></RoundedBox><mesh position={[0,.18,.7]}><boxGeometry args={[width-.3,.04,.05]} /><meshStandardMaterial color="#d9a83f" emissive="#d9a83f" emissiveIntensity={.45} /></mesh><mesh position={[0,-.09,.72]}><boxGeometry args={[width-.46,.02,.02]} /><meshStandardMaterial color={light ? '#fff3cf' : '#fff2c7'} emissive="#d9a83f" emissiveIntensity={.9} /></mesh></group>;
 }
 
 function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
@@ -88,10 +87,13 @@ function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
   if (!count) return null;
   return <>
     <group ref={group}>{visible.map(({ product, index, slot }) => <AppCase key={`${product._id || product.id || product.name}-${index}`} product={product} slot={slot} active={index === activeIndex} onSelect={onSelect} light={light} />)}<Shelf light={light} /></group>
-    <ambientLight intensity={light ? 1.45 : 1.1} /><directionalLight position={[3,6,5]} intensity={light ? 2.5 : 2.2} castShadow /><pointLight position={[-5,2,4]} intensity={light ? 10 : 18} distance={16} color="#e9c878" /><pointLight position={[5,1,2]} intensity={light ? 6 : 10} distance={14} color="#9fb8e8" />
+    <ambientLight intensity={light ? 1.45 : 1.1} /><directionalLight position={[3,6,5]} intensity={light ? 2.5 : 2.2} castShadow /><pointLight position={[-5,2,4]} intensity={light ? 10 : 18} distance={16} color="#d9a83f" /><pointLight position={[5,1,2]} intensity={light ? 6 : 10} distance={14} color="#6688c4" />
     <Environment preset="studio" />
     <ContactShadows position={[0,-1.95,0]} opacity={light ? .28 : .5} scale={17} blur={2.6} far={8} />
-    <group position={[0,-2.43,.4]}><Text fontSize={.14} color={light ? '#5f564c' : '#8f98a5'} anchorX="center" anchorY="middle">3 APPS ON DISPLAY ·  ←  →  BROWSE THE COLLECTION</Text></group>
+    <group position={[0,-2.18,.4]}>
+      <Text fontSize={.19} color={light ? '#8b5f14' : '#d9a83f'} anchorX="center" anchorY="middle">3 APPS ON DISPLAY</Text>
+      <Text position={[0,-.32,0]} fontSize={.16} color={light ? '#4f473e' : '#c5ccd6'} anchorX="center" anchorY="middle">←  →  BROWSE THE COLLECTION</Text>
+    </group>
   </>;
 }
 
