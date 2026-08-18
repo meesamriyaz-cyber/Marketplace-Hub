@@ -8,10 +8,10 @@ import mongoose from "mongoose";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import "dotenv/config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import "dotenv/config";
 const app = express();
 
 app.use(
