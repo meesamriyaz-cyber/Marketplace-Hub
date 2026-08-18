@@ -7,6 +7,7 @@ import Login from '@/pages/login';
 import Register from '@/pages/register';
 import Orders from '@/pages/orders';
 import AdminDashboard from '@/pages/AdminDashboard';
+import AdminProducts from '@/pages/AdminProducts';
 import { useAuth } from '@/contexts/AuthContext';
 
 function HomePage() {
@@ -24,6 +25,7 @@ export default function App() {
     <Route path="/" component={HomePage} />
     <Route path="/orders" component={() => <ProtectedRoute><Orders /></ProtectedRoute>} />
     <Route path="/admin" component={() => <AdminRoute><AdminDashboard /></AdminRoute>} />
+    <Route path="/admin/products" component={() => <AdminRoute><AdminProducts /></AdminRoute>} />
     <Route path="/login" component={Login} />
     <Route path="/register" component={Register} />
     <Route component={NotFound} />
