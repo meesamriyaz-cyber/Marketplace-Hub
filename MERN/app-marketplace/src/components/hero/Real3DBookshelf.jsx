@@ -102,7 +102,6 @@ function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
     <ContactShadows position={[0,-1.95,0]} opacity={light ? .28 : .5} scale={17} blur={2.6} far={8} />
     <group position={[0,-2.78,.4]}>
       <Text fontSize={.43} color={light ? '#2b2824' : '#f2eee6'} anchorX="center" anchorY="middle" letterSpacing={.04}>BROWSE THE COLLECTION</Text>
-      <Text position={[0,-.56,0]} fontSize={.48} color={light ? '#8b5f14' : '#e9c878'} anchorX="center" anchorY="middle">←  →</Text>
     </group>
   </>;
 }
