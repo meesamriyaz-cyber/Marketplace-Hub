@@ -4,7 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ChevronDown, Edit3, Package, Plus, Search, Trash2 } from 'lucide-react';
 import { api } from '@/services/api';
 
-const emptyForm = { name: '', category: '', tagline: '', description: '', price: '', creator: '', initials: '', rating: '', reviews: '', install: '', art: '', accent: '', features: '', badge: '', salesCount: 0 };
+// Required by the current Product model. Keep these sensible defaults hidden from normal admins.
+const DEFAULT_ART = 'default';
+const DEFAULT_ACCENT = 'default';
+const emptyForm = { name: '', category: '', tagline: '', description: '', price: '', creator: '', initials: '', rating: '', reviews: '', install: '', art: DEFAULT_ART, accent: DEFAULT_ACCENT, features: '', badge: '', salesCount: 0 };
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();
@@ -18,8 +21,8 @@ export default function AdminProducts() {
   const visible = useMemo(() => products.filter((p) => `${p.name} ${p.category} ${p.creator}`.toLowerCase().includes(search.toLowerCase())), [products, search]);
   const closeForm = () => { setEditing(null); setForm(emptyForm); setShowForm(false); setShowAdvanced(false); setError(''); };
   const startAdd = () => { setEditing(null); setForm(emptyForm); setShowAdvanced(false); setError(''); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const startEdit = (product) => { setEditing(product); setForm({ ...emptyForm, ...product, features: (product.features || []).join(', ') }); setShowAdvanced(false); setError(''); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const save = useMutation({ mutationFn: () => { const payload = { ...form, price: Number(form.price), rating: Number(form.rating), reviews: Number(form.reviews), salesCount: Number(form.salesCount || 0), features: String(form.features || '').split(',').map((v) => v.trim()).filter(Boolean) }; return editing ? api.admin.updateProduct(editing._id, payload) : api.admin.createProduct(payload); }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-products'] }); queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] }); closeForm(); }, onError: (e) => setError(e.message || 'Could not save product.') });
+  const startEdit = (product) => { setEditing(product); setForm({ ...emptyForm, ...product, features: (product.features || []).join(', '), art: product.art || DEFAULT_ART, accent: product.accent || DEFAULT_ACCENT }); setShowAdvanced(false); setError(''); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const save = useMutation({ mutationFn: () => { const payload = { ...form, art: form.art || DEFAULT_ART, accent: form.accent || DEFAULT_ACCENT, price: Number(form.price), rating: Number(form.rating), reviews: Number(form.reviews), salesCount: Number(form.salesCount || 0), features: String(form.features || '').split(',').map((v) => v.trim()).filter(Boolean) }; return editing ? api.admin.updateProduct(editing._id, payload) : api.admin.createProduct(payload); }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-products'] }); queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] }); closeForm(); }, onError: (e) => setError(e.message || 'Could not save product.') });
   const remove = useMutation({ mutationFn: api.admin.deleteProduct, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-products'] }); queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] }); }, onError: (e) => setError(e.message || 'Could not delete product.') });
   const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
   const field = (key, label, type = 'text', required = true, hint = '') => <label className="block"><span className="mb-2 block text-xs font-medium uppercase tracking-[.1em] text-muted-foreground">{label}{required && <span className="ml-1 text-[#ee9d83]">*</span>}</span><input type={type} value={form[key] ?? ''} onChange={update(key)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:border-[#e9c878]" required={required} />{hint && <span className="mt-1.5 block text-xs text-muted-foreground">{hint}</span>}</label>;
