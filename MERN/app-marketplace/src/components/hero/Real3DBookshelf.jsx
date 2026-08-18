@@ -7,7 +7,7 @@ const ACCENTS = ['#f0b429', '#4f9f78', '#e96f52', '#5f86d8', '#9a70c7'];
 const price = (v) => v === undefined || v === null || v === '' ? '' : `₹${Number(v).toLocaleString('en-IN')}`;
 const accentFor = (p) => p.accent || ACCENTS[(p._id || p.id || p.name || '').length % ACCENTS.length];
 
-function Artwork({ product, accent, light }) {
+function Artwork({ product, accent }) {
   if (typeof product.art === 'string' && /^(https?:\/\/|data:image\/)/i.test(product.art)) {
     const texture = useTexture(product.art);
     useEffect(() => { texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8; texture.needsUpdate = true; }, [texture]);
@@ -47,7 +47,7 @@ function AppCase({ product, slot, active, onSelect, light }) {
     <RoundedBox args={[2.28, 3.62, .56]} radius={.12} smoothness={6}><meshStandardMaterial color={frame} metalness={.72} roughness={.22} /></RoundedBox>
     <RoundedBox position={[0,0,.3]} args={[2.04,3.34,.06]} radius={.075} smoothness={5}><meshStandardMaterial color={inner} emissive={accent} emissiveIntensity={selected ? .11 : .025} metalness={.2} roughness={.28} /></RoundedBox>
     <mesh position={[0,1.45,.35]}><boxGeometry args={[1.86,.035,.018]} /><meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={.8} /></mesh>
-    <Artwork product={product} accent={accent} light={light} />
+    <Artwork product={product} accent={accent} />
     <Text position={[0,-.78,.36]} maxWidth={1.7} fontSize={.29} lineHeight={1.05} color={title} anchorX="center" anchorY="middle" textAlign="center">{product.name || 'Application'}</Text>
     <Text position={[0,-1.15,.36]} maxWidth={1.6} fontSize={.11} color={muted} anchorX="center" anchorY="middle" textAlign="center">{product.tagline || product.category || 'Business application'}</Text>
     <Text position={[0,-1.47,.36]} fontSize={.17} color={accent} anchorX="center" anchorY="middle">{price(product.price)}</Text>
@@ -111,6 +111,9 @@ export default function Real3DBookshelf({ products = [], onSelect }) {
   const safeProducts = Array.isArray(products) ? products.filter(Boolean) : [];
   const [activeIndex, setActiveIndex] = useState(0);
   const [light, setLight] = useState(() => typeof document !== 'undefined' && document.documentElement.classList.contains('light'));
+
+  const next = () => setActiveIndex((v) => (v + 1) % safeProducts.length);
+  const previous = () => setActiveIndex((v) => (v - 1 + safeProducts.length) % safeProducts.length);
 
   useEffect(() => { if (activeIndex >= safeProducts.length) setActiveIndex(0); }, [safeProducts.length, activeIndex]);
 
