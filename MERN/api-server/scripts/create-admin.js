@@ -1,4 +1,11 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User } from '../src/models/User.js';
@@ -14,8 +21,8 @@ if (missing.length) {
 const email = process.env.ADMIN_EMAIL.toLowerCase().trim();
 const password = process.env.ADMIN_PASSWORD;
 
-if (password.length < 12) {
-  console.error('ADMIN_PASSWORD must be at least 12 characters long.');
+if (password.length < 8) {
+  console.error('ADMIN_PASSWORD must be at least 8characters long.');
   process.exit(1);
 }
 
