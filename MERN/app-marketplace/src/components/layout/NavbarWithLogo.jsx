@@ -6,7 +6,7 @@ import { ShoppingBag, LogOut, Sun, Moon } from 'lucide-react';
 
 const FIRM_LOGO = '/cutting-edge-enterprises-logo.svg';
 
-export default function Navbar({ onToggleTheme, theme }) {
+export default function NavbarWithLogo({ onToggleTheme, theme }) {
   const { isAuthenticated, logout } = useAuth();
   const { data: cartItems = [] } = useQuery({ queryKey: ['cart'], queryFn: api.cart.get, enabled: isAuthenticated });
   const cartCount = Array.isArray(cartItems) ? cartItems.length : 0;
