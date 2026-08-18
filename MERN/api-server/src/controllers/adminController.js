@@ -21,7 +21,15 @@ export const listProducts = async (_req, res, next) => {
 };
 
 export const createProduct = async (req, res, next) => {
-  try { res.status(201).json(await Product.create(req.body)); } catch (err) { next(err); }
+  try {
+    const product = await Product.create(req.body);
+    res.status(201).json(product);
+  } catch (err) {
+    if (err?.name === 'ValidationError') {
+      return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') });
+    }
+    next(err);
+  }
 };
 
 export const updateProduct = async (req, res, next) => {
@@ -29,7 +37,12 @@ export const updateProduct = async (req, res, next) => {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err?.name === 'ValidationError') {
+      return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') });
+    }
+    next(err);
+  }
 };
 
 export const deleteProduct = async (req, res, next) => {
