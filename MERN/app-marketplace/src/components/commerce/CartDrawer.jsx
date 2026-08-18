@@ -1,0 +1,14 @@
+import { motion } from 'framer-motion';
+import { ArrowRight, ShoppingBag, Trash2, X } from 'lucide-react';
+import ProductArtwork from '@/components/catalog/ProductArtwork';
+
+export default function CartDrawer({ cart, onClose, onRemove, onCheckout }) {
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  return <motion.div className="fixed inset-0 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true">
+    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+    <motion.aside initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-border-subtle bg-surface">
+      <div className="flex items-center justify-between border-b border-border px-6 py-5"><div><div className="eyebrow">Your collection</div><h2 className="display mt-1 text-3xl text-foreground">Shopping bag</h2></div><button type="button" onClick={onClose} className="flex size-9 items-center justify-center rounded-full border border-border" aria-label="Close shopping bag"><X className="size-4" /></button></div>
+      {cart.length === 0 ? <div className="flex flex-1 flex-col items-center justify-center px-8 text-center"><ShoppingBag className="mb-5 size-8 text-muted-foreground" /><h3 className="display text-3xl text-foreground">A little more room.</h3><p className="mt-3 text-sm text-muted-foreground">Your bag is empty.</p></div> : <><div className="quiet-scrollbar flex-1 space-y-4 overflow-y-auto p-6">{cart.map((item) => <div key={item.id} className="flex gap-4 border-b border-border pb-4"><div className="h-20 w-24 shrink-0 overflow-hidden rounded-xl"><ProductArtwork product={item} /></div><div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><h3 className="display text-2xl text-foreground">{item.name}</h3><span className="mono text-xs text-[#e9c878]">₹{Number(item.price || 0).toLocaleString('en-IN')}</span></div><button type="button" onClick={() => onRemove(item.id)} className="mt-3 flex items-center gap-1.5 text-[11px] uppercase tracking-[.12em] text-[#ee9d83]"><Trash2 className="size-3" /> Remove</button></div></div>)}</div><div className="border-t border-border p-6"><div className="flex items-center justify-between text-sm"><span>Subtotal</span><span className="mono">₹{Number(total || 0).toLocaleString('en-IN')}</span></div><button type="button" onClick={onCheckout} className="btn-primary mt-6 w-full">Continue to checkout <ArrowRight className="size-4" /></button></div></>}
+    </motion.aside>
+  </motion.div>;
+}
