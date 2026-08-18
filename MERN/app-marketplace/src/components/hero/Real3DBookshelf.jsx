@@ -63,36 +63,30 @@ function Shelf({ width = 11.7, light }) {
 
 function Scene({ products, activeIndex, setActiveIndex, onSelect, light }) {
   const group = useRef();
-  const introStarted = useRef(false);
   const count = products.length;
   const next = () => setActiveIndex((v) => (v + 1) % count);
   const previous = () => setActiveIndex((v) => (v - 1 + count) % count);
 
   useEffect(() => {
-    const key = (e) => { if (e.key === 'ArrowRight') next(); if (e.key === 'ArrowLeft') previous(); };
+    const key = (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); previous(); }
+    };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [count]);
 
   useFrame((state, d) => {
     if (!group.current) return;
-
-    // Bring the entire showroom in gently on first render instead of
-    // dropping the shelf into place abruptly. The animation settles into
-    // the same pointer-responsive showroom motion used after load.
     const elapsed = state.clock.getElapsedTime();
     const intro = THREE.MathUtils.clamp(elapsed / 1.15, 0, 1);
     const eased = 1 - Math.pow(1 - intro, 3);
-    const targetY = 0;
-    const targetScale = 1;
-    const introY = THREE.MathUtils.lerp(-0.72, targetY, eased);
-    const introScale = THREE.MathUtils.lerp(0.86, targetScale, eased);
-
+    const introY = THREE.MathUtils.lerp(-0.72, 0, eased);
+    const introScale = THREE.MathUtils.lerp(0.86, 1, eased);
     group.current.position.y = THREE.MathUtils.damp(group.current.position.y, introY, 7, d);
     group.current.scale.setScalar(THREE.MathUtils.damp(group.current.scale.x, introScale, 7, d));
     group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, state.pointer.x * .035, 2.5, d);
     group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, -state.pointer.y * .025, 2.5, d);
-    introStarted.current = true;
   });
 
   const visible = useMemo(() => count ? [-1, 0, 1].map((offset, slot) => {
@@ -143,6 +137,10 @@ export default function Real3DBookshelf({ products = [], onSelect }) {
           <Canvas camera={{ position: [0, .65, 15.4], fov: 38 }} shadows dpr={[1, 1.7]}>
             <Suspense fallback={null}><Scene products={safeProducts} activeIndex={activeIndex} setActiveIndex={setActiveIndex} onSelect={onSelect} light={light} /></Suspense>
           </Canvas>
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex items-center justify-center gap-4 sm:bottom-1">
+            <button type="button" onClick={previous} aria-label="Previous app" className="pointer-events-auto flex size-12 items-center justify-center rounded-full border border-[#d3a83f]/45 bg-background/80 text-2xl text-[#d3a83f] shadow-lg backdrop-blur transition hover:-translate-x-1 hover:border-[#d3a83f] hover:bg-[#d3a83f]/10 focus:outline-none focus:ring-2 focus:ring-[#d3a83f]/60">←</button>
+            <button type="button" onClick={next} aria-label="Next app" className="pointer-events-auto flex size-12 items-center justify-center rounded-full border border-[#d3a83f]/45 bg-background/80 text-2xl text-[#d3a83f] shadow-lg backdrop-blur transition hover:translate-x-1 hover:border-[#d3a83f] hover:bg-[#d3a83f]/10 focus:outline-none focus:ring-2 focus:ring-[#d3a83f]/60">→</button>
+          </div>
         </div>
       </div>
     </div>
