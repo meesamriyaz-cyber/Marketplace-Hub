@@ -8,7 +8,7 @@ out-tsc
 .expo
 .expo-shared
 **/.env
-    q# dependencies
+# dependencies
 node_modules
 
 # IDEs and editors
