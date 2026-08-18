@@ -130,7 +130,7 @@ export default function Real3DBookshelf({ products = [], onSelect }) {
     <div className="section-container relative z-10 flex w-full items-center py-16 sm:py-20">
       <div className="grid w-full items-center gap-2 lg:grid-cols-[.76fr_1.24fr] lg:gap-4 xl:gap-6">
         <div className="max-w-xl pt-2 lg:pt-0">
-          <h1 className="display text-6xl leading-[.88] text-foreground sm:text-7xl xl:text-[5.35rem]">Business apps that <span className="text-[#d3a83f]">work everywhere.</span></h1>
+          <h1 className="display text-6xl leading-[.88] text-foreground sm:text-7xl xl:text-[5.35rem]">Apps for Small Businesses. <span className="text-[#d3a83f]">Built to Work Everywhere.</span></h1>
           <p className="mt-6 max-w-lg text-base leading-7 text-muted-foreground sm:text-lg">Hybrid apps built for your counter, office, and online customers — connecting everyday operations with digital commerce.</p>
           <div className="mt-8 flex items-center gap-3 text-sm font-semibold uppercase tracking-[.12em] text-foreground sm:text-base"><span className="h-px w-10 shrink-0 bg-[#d3a83f]" /> Built for local + online business</div>
         </div>
