@@ -1,0 +1,6 @@
+import { Check } from 'lucide-react';
+import ContactForm from '@/components/requirements/ContactForm';
+
+export default function RequirementsSection() {
+  return <section id="requirements" className="min-h-[100svh] bg-background"><div className="section-container flex min-h-[100svh] items-center py-16 sm:py-20"><div className="grid w-full items-center gap-10 lg:grid-cols-[.9fr_1.1fr] lg:gap-16"><div><div className="eyebrow text-[#e9c878]">Need something specific?</div><h2 className="display mt-3 max-w-xl text-5xl leading-[.92] text-foreground sm:text-6xl">Tell us what your business needs.</h2><p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">Cannot find the right application? Tell us what you need. We can identify, customise, or build a practical solution around your workflow.</p><div className="mt-7 space-y-3 text-sm text-muted-foreground"><div className="flex gap-3"><Check className="mt-0.5 size-4 shrink-0 text-[#a9d0b8]" />Explain the workflow or problem.</div><div className="flex gap-3"><Check className="mt-0.5 size-4 shrink-0 text-[#a9d0b8]" />Share integrations, users, or constraints.</div><div className="flex gap-3"><Check className="mt-0.5 size-4 shrink-0 text-[#a9d0b8]" />Get a recommendation instead of browsing endlessly.</div></div></div><ContactForm /></div></div></section>;
+}
