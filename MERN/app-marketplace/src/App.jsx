@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, Route, Switch } from 'wouter';
+import { Route, Switch } from 'wouter';
 import Navbar from '@/components/layout/Navbar';
+import NotFound from '@/components/layout/NotFound';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import AdminRoute from '@/components/layout/AdminRoute';
 import HomePage from '@/pages/HomePage';
@@ -11,14 +12,26 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import AdminProducts from '@/pages/AdminProducts';
 import { useAuth } from '@/contexts/AuthContext';
 
-function NotFound() {
-  return <div className="flex min-h-screen items-center justify-center bg-background p-6"><div className="w-full max-w-md text-center"><h1 className="mb-4 text-6xl font-bold text-neutral-100">404</h1><p className="mb-8 text-lg text-neutral-400">Page not found</p><Link to="/" className="btn-primary">Back to Cutting Edge Apps</Link></div></div>;
-}
-
 export default function App() {
   const { loading } = useAuth();
   const [theme, setTheme] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('theme') || 'dark' : 'dark');
-  useEffect(() => { const root = document.documentElement; if (theme === 'light') { root.classList.add('light'); root.classList.remove('dark'); } else { root.classList.add('dark'); root.classList.remove('light'); } localStorage.setItem('theme', theme); }, [theme]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('light', theme === 'light');
+    root.classList.toggle('dark', theme !== 'light');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><div className="size-8 animate-spin rounded-full border-2 border-[#ee9d83] border-t-transparent" /></div>;
-  return <div className="market-shell"><div className="grain" /><Navbar theme={theme} onToggleTheme={() => setTheme(value => value === 'dark' ? 'light' : 'dark')} /><main><Switch><Route path="/" component={HomePage} /><Route path="/orders" component={() => <ProtectedRoute><Orders /></ProtectedRoute>} /><Route path="/admin" component={() => <AdminRoute><AdminDashboard /></AdminRoute>} /><Route path="/admin/products" component={() => <AdminRoute><AdminProducts /></AdminRoute>} /><Route path="/login" component={Login} /><Route path="/register" component={Register} /><Route component={NotFound} /></Switch></main></div>;
+
+  return <div className="market-shell"><div className="grain" /><Navbar theme={theme} onToggleTheme={() => setTheme(value => value === 'dark' ? 'light' : 'dark')} /><main><Switch>
+    <Route path="/" component={HomePage} />
+    <Route path="/orders" component={() => <ProtectedRoute><Orders /></ProtectedRoute>} />
+    <Route path="/admin" component={() => <AdminRoute><AdminDashboard /></AdminRoute>} />
+    <Route path="/admin/products" component={() => <AdminRoute><AdminProducts /></AdminRoute>} />
+    <Route path="/login" component={Login} />
+    <Route path="/register" component={Register} />
+    <Route component={NotFound} />
+  </Switch></main></div>;
 }
