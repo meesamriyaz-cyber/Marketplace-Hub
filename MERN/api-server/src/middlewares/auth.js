@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 
-const isTokenIssuedBeforePasswordChange = (payload, user) => {
+const isTokenInvalid = (payload, user) => {
+  if (payload.passwordVersion !== undefined) return payload.passwordVersion !== (user.passwordVersion || 0);
   if (!user.passwordChangedAt || !payload.iat) return false;
   return payload.iat * 1000 < new Date(user.passwordChangedAt).getTime();
 };
@@ -15,7 +16,7 @@ export const authenticate = async (req, res, next) => {
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(payload.userId).select('-passwordHash');
-    if (!user || !user.isActive || isTokenIssuedBeforePasswordChange(payload, user)) return res.status(401).json({ error: 'Invalid token' });
+    if (!user || !user.isActive || isTokenInvalid(payload, user)) return res.status(401).json({ error: 'Invalid token' });
     req.user = user;
     next();
   } catch {
@@ -41,7 +42,7 @@ export const optionalAuth = async (req, res, next) => {
     if (!token) return next();
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(payload.userId).select('-passwordHash');
-    if (user && user.isActive && !isTokenIssuedBeforePasswordChange(payload, user)) req.user = user;
+    if (user && user.isActive && !isTokenInvalid(payload, user)) req.user = user;
     next();
   } catch {
     next();
