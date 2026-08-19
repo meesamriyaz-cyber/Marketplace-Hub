@@ -28,67 +28,34 @@ export default function AdminUsers() {
     return matchesSearch && matchesStatus && matchesRole;
   }), [users, search, statusFilter, roleFilter]);
 
-  const openEdit = (user) => {
-    setEditing(user);
-    setSaveError('');
-    setForm({ name: user.name || '', email: user.email || '', role: user.role || 'user', isActive: user.isActive !== false });
-  };
-
+  const openEdit = (user) => { setEditing(user); setSaveError(''); setForm({ name: user.name || '', email: user.email || '', role: user.role || 'user', isActive: user.isActive !== false }); };
   const closeEdit = () => { setEditing(null); setSaveError(''); };
   const isSelf = editing && currentUser && (editing._id === currentUser.id || editing._id === currentUser._id || editing.email === currentUser.email);
   const isSoleAdmin = isSelf && editing.role !== 'user' && users.filter((user) => user.role !== 'user' && user.isActive !== false).length <= 1;
 
   const update = useMutation({
     mutationFn: () => api.admin.updateUser(editing._id, { ...form, ...(isSoleAdmin ? { role: editing.role, isActive: true } : {}) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['current-user'] });
-      closeEdit();
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-users'] }); queryClient.invalidateQueries({ queryKey: ['current-user'] }); closeEdit(); },
     onError: (e) => setSaveError(e.message || 'Could not update user.'),
   });
 
   const reset = useMutation({
     mutationFn: () => api.admin.resetUserPassword(resetting._id),
     onSuccess: (data) => {
-      if (!data?.temporaryPassword) {
-        setResetError(data?.message || 'Password reset completed, but no temporary password was returned.');
-        return;
-      }
-      setTemporaryPassword(data.temporaryPassword);
-      setResetError('');
-      setCopied(false);
+      if (!data?.temporaryPassword) { setResetError(data?.message || 'Password reset completed, but no temporary password was returned.'); return; }
+      setTemporaryPassword(data.temporaryPassword); setResetError(''); setCopied(false);
     },
     onError: (e) => setResetError(e.message || 'Could not reset password.'),
   });
 
-  const openReset = (user) => {
-    setResetting(user);
-    setTemporaryPassword('');
-    setResetError('');
-    setCopied(false);
-  };
-
-  const closeReset = () => {
-    setResetting(null);
-    setTemporaryPassword('');
-    setResetError('');
-    setCopied(false);
-    reset.reset();
-  };
-
+  const openReset = (user) => { setResetting(user); setTemporaryPassword(''); setResetError(''); setCopied(false); };
+  const closeReset = () => { setResetting(null); setTemporaryPassword(''); setResetError(''); setCopied(false); reset.reset(); };
   const copyPassword = async () => {
     if (!temporaryPassword) return;
-    try {
-      await navigator.clipboard.writeText(temporaryPassword);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setResetError('Could not copy automatically. Please select and copy the password manually.');
-    }
+    try { await navigator.clipboard.writeText(temporaryPassword); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    catch { setResetError('Could not copy automatically. Please select and copy the password manually.'); }
   };
 
-  // Missing/undefined role is treated as the normal user role because the User model defaults to "user".
   const targetRole = resetting?.role || 'user';
   const targetIsAdmin = targetRole === 'admin' || targetRole === 'super_admin';
   const actorIsSuperAdmin = currentUser?.role === 'super_admin';
@@ -108,6 +75,24 @@ export default function AdminUsers() {
 
     {editing && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div className="w-full max-w-lg rounded-3xl border border-border bg-surface p-6 shadow-2xl"><div className="flex items-center justify-between"><div><div className="eyebrow">Account administration</div><h2 className="display text-2xl">Edit user</h2></div><button type="button" onClick={closeEdit} className="btn-ghost"><X className="size-5" /></button></div>{isSoleAdmin && <div className="mt-5 rounded-2xl border border-[#e9c878]/30 bg-[#e9c878]/10 p-3 text-sm">You are the only active administrator. Your admin role and active status cannot be removed here.</div>}{saveError && <div className="mt-5 rounded-2xl border border-[#ee9d83]/30 bg-[#ee9d83]/10 p-3 text-sm">{saveError}</div>}<div className="mt-6 grid gap-4"><label className="block"><span className="mb-1.5 block text-xs font-medium uppercase tracking-[.1em] text-muted-foreground">Name</span><input className="input-field w-full" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label><label className="block"><span className="mb-1.5 block text-xs font-medium uppercase tracking-[.1em] text-muted-foreground">Email</span><input className="input-field w-full" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label><label className="block"><span className="mb-1.5 block text-xs font-medium uppercase tracking-[.1em] text-muted-foreground">Role</span><select className="input-field w-full" value={form.role} disabled={isSoleAdmin} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="user">User</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></select></label><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isActive} disabled={isSoleAdmin} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} /> Active account</label></div><button type="button" disabled={update.isPending} onClick={() => update.mutate()} className="btn-primary mt-6 w-full">{update.isPending ? 'Saving…' : 'Save changes'}</button></div></div>}
 
-    {resetting && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-2xl"><div className="flex items-center justify-between"><div><div className="eyebrow">Account security</div><h2 className="display text-2xl">Reset password</h2></div><button type="button" onClick={closeReset} className="btn-ghost"><X className="size-5" /></button></div><p className="mt-4 text-sm text-muted-foreground">This will replace the current password for <strong>{resetting.email}</strong> with a newly generated temporary password.</p><div className="mt-3 text-xs text-muted-foreground">Target role: <span className="font-medium">{targetRole}</span></div>{targetIsAdmin && !actorIsSuperAdmin && <div className="mt-4 rounded-2xl border border-[#ee9d83]/30 bg-[#ee9d83]/10 p-3 text-sm">Only a Super Admin can reset an administrator password.</div>}{resetError && <div className="mt-4 rounded-2xl border border-[#ee9d83]/30 bg-[#ee9d83]/10 p-3 text-sm">{resetError}</div>}{temporaryPassword ? <div className="mt-5 rounded-2xl border border-[#e9c878]/30 bg-[#e9c878]/10 p-4"><div className="text-xs font-medium uppercase tracking-[.1em] text-muted-foreground">Temporary password — shown once</div><div className="mt-3 flex items-center gap-2"><code className="min-w-0 flex-1 break-all rounded-xl border border-border bg-background px-3 py-2.5 text-sm">{temporaryPassword}</code><button type="button" className="btn-ghost shrink-0" onClick={copyPassword}>{copied ? <Check className="size-4" /> : <Copy className="size-4" />}{copied ? 'Copied' : 'Copy'}</button></div><p className="mt-3 text-xs text-muted-foreground">Save or securely share this password now. It will not be displayed again after closing this dialog.</p></div> : <button type="button" disabled={reset.isPending || !canReset} onClick={() => reset.mutate()} className="btn-primary mt-6 w-full">{reset.isPending ? 'Generating…' : 'Generate temporary password'}</button>}<button type="button" onClick={closeReset} className="btn-ghost mt-3 w-full">{temporaryPassword ? 'Done' : 'Cancel'}</button></div></div>}
+    {resetting && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+          <div><div className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500 dark:text-slate-400">Account security</div><h2 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">Reset password</h2></div>
+          <button type="button" onClick={closeReset} aria-label="Close" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"><X className="size-5" /></button>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm leading-6 text-slate-700 dark:text-slate-300">This will replace the current password for <strong className="font-semibold text-slate-900 dark:text-white">{resetting.email}</strong> with a newly generated temporary password.</p>
+          {targetIsAdmin && !actorIsSuperAdmin && <div className="mt-4 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm font-medium text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">Only a Super Admin can reset an administrator password.</div>}
+          {resetError && <div className="mt-4 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm font-medium text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">{resetError}</div>}
+          {temporaryPassword ? <div className="mt-5 rounded-2xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/40">
+            <div className="text-xs font-bold uppercase tracking-[.1em] text-amber-900 dark:text-amber-200">Temporary password · shown once</div>
+            <div className="mt-3 flex items-center gap-2"><code className="min-w-0 flex-1 break-all rounded-xl border border-slate-300 bg-white px-3 py-3 font-mono text-sm font-semibold text-slate-900 shadow-sm dark:border-slate-600 dark:bg-slate-950 dark:text-white">{temporaryPassword}</code><button type="button" className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700" onClick={copyPassword}>{copied ? <Check className="size-4" /> : <Copy className="size-4" />}{copied ? 'Copied' : 'Copy'}</button></div>
+            <p className="mt-3 text-xs leading-5 text-amber-900 dark:text-amber-200">Save or securely share this password now. It will not be displayed again after closing this dialog.</p>
+          </div> : <button type="button" disabled={reset.isPending || !canReset} onClick={() => reset.mutate()} className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">{reset.isPending ? 'Generating…' : 'Generate temporary password'}</button>}
+          <button type="button" onClick={closeReset} className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">{temporaryPassword ? 'Done' : 'Cancel'}</button>
+        </div>
+      </div>
+    </div>}
   </div>;
 }
