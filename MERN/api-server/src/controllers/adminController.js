@@ -13,7 +13,7 @@ export const dashboard = async (_req, res, next) => {
 export const listProducts = async (_req, res, next) => { try { res.json(await Product.find().sort({ createdAt: -1 }).lean()); } catch (err) { next(err); } };
 export const createProduct = async (req, res, next) => { try { res.status(201).json(await Product.create(req.body)); } catch (err) { if (err?.name === 'ValidationError') return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') }); next(err); } };
 export const updateProduct = async (req, res, next) => { try { const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }); if (!product) return res.status(404).json({ error: 'Product not found' }); res.json(product); } catch (err) { if (err?.name === 'ValidationError') return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') }); next(err); } };
-export const deleteProduct = async (req, res, next) => { try { const product = await Product.findByIdAndDelete(req.params.id); if (!product) return res.status(404).json({ error: 'Product not found' }); res.json({ message: 'Product deleted' }); } catch (err) { next(err); } };
+export const deleteProduct = async (req, res, next) => { try { const product = await Product.findByIdAndDelete(req.params.id); if (!product) return res.status(404).json({ error: 'Product deleted' }); res.json({ message: 'Product deleted' }); } catch (err) { next(err); } };
 export const listUsers = async (_req, res, next) => { try { res.json(await User.find().select('-passwordHash').sort({ createdAt: -1 }).lean()); } catch (err) { next(err); } };
 export const updateUser = async (req, res, next) => { try { const allowed = {}; for (const key of ['name', 'email', 'role', 'isActive']) if (req.body[key] !== undefined) allowed[key] = req.body[key]; const user = await User.findByIdAndUpdate(req.params.id, allowed, { new: true, runValidators: true }).select('-passwordHash'); if (!user) return res.status(404).json({ error: 'User not found' }); res.json(user); } catch (err) { next(err); } };
 
@@ -33,5 +33,17 @@ export const resetUserPassword = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-export const sales = async (_req, res, next) => { try { const orders = await Order.find({ status: 'paid' }).sort({ createdAt: -1 }).lean(); const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total || 0), 0); const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((s, item) => s + Number(item.quantity || 0), 0), 0); res.json({ totalRevenue, paidOrders: orders.length, totalItems, orders }); } catch (err) { next(err); } };
+export const sales = async (_req, res, next) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 }).lean();
+    const paidOrders = orders.filter((order) => order.status === 'paid');
+    const pendingOrders = orders.filter((order) => order.status === 'pending');
+    const cancelledOrders = orders.filter((order) => order.status === 'cancelled');
+    const totalRevenue = paidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const totalItems = paidOrders.reduce((sum, order) => sum + (order.items || []).reduce((s, item) => s + Number(item.quantity || 0), 0), 0);
+    const pendingValue = pendingOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const cancelledValue = cancelledOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    res.json({ totalRevenue, paidOrders: paidOrders.length, pendingOrders: pendingOrders.length, cancelledOrders: cancelledOrders.length, pendingValue, cancelledValue, totalItems, orders });
+  } catch (err) { next(err); }
+};
 export const reports = async (_req, res, next) => { try { const [topProducts, byDay] = await Promise.all([Order.aggregate([{ $match: { status: 'paid' } }, { $unwind: '$items' }, { $group: { _id: '$items.productId', name: { $first: '$items.name' }, quantity: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } }, { $sort: { revenue: -1 } }, { $limit: 10 }]), Order.aggregate([{ $match: { status: 'paid' } }, { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, orders: { $sum: 1 }, revenue: { $sum: '$total' } } }, { $sort: { _id: 1 } }])]); res.json({ topProducts, byDay }); } catch (err) { next(err); } };
