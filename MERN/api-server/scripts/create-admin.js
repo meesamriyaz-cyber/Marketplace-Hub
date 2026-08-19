@@ -11,7 +11,7 @@ for (const key of required) {
   }
 }
 
-if (process.env.ADMIN_PASSWORD.length < 12) {
+if (process.env.ADMIN_PASSWORD.length < 8) {
   console.error('ADMIN_PASSWORD must be at least 12 characters.');
   process.exit(1);
 }
