@@ -12,42 +12,16 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  auth: {
-    register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
-    login: (payload) => request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
-    me: () => request('/auth/me'),
-    logout: () => request('/auth/logout', { method: 'POST' }),
-  },
+  auth: { register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }), login: (payload) => request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }), me: () => request('/auth/me'), logout: () => request('/auth/logout', { method: 'POST' }) },
   products: { list: () => request('/products'), get: (id) => request(`/products/${id}`) },
-  cart: {
-    get: () => request('/cart').then((data) => data.items || []),
-    add: (payload) => request('/cart', { method: 'POST', body: JSON.stringify(payload) }).then((data) => data.items || []),
-    remove: (productId) => request(`/cart/${productId}`, { method: 'DELETE' }).then((data) => data.items || []),
-  },
-  orders: {
-    list: () => request('/orders'),
-    create: () => request('/orders', { method: 'POST' }),
-    get: (id) => request(`/orders/${id}`),
-  },
-  payments: {
-    createOrder: (orderId) => request('/payments/create-order', { method: 'POST', body: JSON.stringify({ orderId }) }),
-    verify: (payload) => request('/payments/verify', { method: 'POST', body: JSON.stringify(payload) }),
-  },
+  cart: { get: () => request('/cart').then((data) => data.items || []), add: (payload) => request('/cart', { method: 'POST', body: JSON.stringify(payload) }).then((data) => data.items || []), remove: (productId) => request(`/cart/${productId}`, { method: 'DELETE' }).then((data) => data.items || []) },
+  orders: { list: () => request('/orders'), create: () => request('/orders', { method: 'POST' }), get: (id) => request(`/orders/${id}`) },
+  payments: { createOrder: (orderId) => request('/payments/create-order', { method: 'POST', body: JSON.stringify({ orderId }) }), verify: (payload) => request('/payments/verify', { method: 'POST', body: JSON.stringify(payload)) },
   contact: { submit: (payload) => request('/contact', { method: 'POST', body: JSON.stringify(payload) }) },
   admin: {
-    dashboard: () => request('/admin/dashboard'),
-    products: () => request('/admin/products'),
-    createProduct: (payload) => request('/admin/products', { method: 'POST', body: JSON.stringify(payload) }),
-    updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-    deleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE' }),
-    categories: () => request('/admin/categories'),
-    createCategory: (payload) => request('/admin/categories', { method: 'POST', body: JSON.stringify(payload) }),
-    updateCategory: (id, payload) => request(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-    deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE' }),
-    users: () => request('/admin/users'),
-    updateUser: (id, payload) => request(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-    resetUserPassword: (id) => request(`/admin/users/${id}/reset-password`, { method: 'POST' }),
-    sales: () => request('/admin/sales'),
-    reports: () => request('/admin/reports'),
+    dashboard: () => request('/admin/dashboard'), products: () => request('/admin/products'), createProduct: (payload) => request('/admin/products', { method: 'POST', body: JSON.stringify(payload) }), updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) }), deleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE' }),
+    categories: () => request('/admin/categories'), createCategory: (payload) => request('/admin/categories', { method: 'POST', body: JSON.stringify(payload) }), updateCategory: (id, payload) => request(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(payload) }), deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE' }),
+    users: () => request('/admin/users'), updateUser: (id, payload) => request(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) }), resetUserPassword: (id) => request(`/admin/users/${id}/reset-password`, { method: 'POST' }),
+    sales: () => request('/admin/sales'), reports: () => request('/admin/reports'), orders: () => request('/admin/orders'), getOrder: (id) => request(`/admin/orders/${id}`), cancelOrder: (id) => request(`/admin/orders/${id}/cancel`, { method: 'PUT' }),
   },
 };
