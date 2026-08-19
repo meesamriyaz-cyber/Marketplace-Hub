@@ -14,10 +14,7 @@ const generateTemporaryPassword = () => {
 export const dashboard = async (_req, res, next) => {
   try {
     const [products, users, orders, paidOrders] = await Promise.all([
-      Product.countDocuments(),
-      User.countDocuments(),
-      Order.countDocuments(),
-      Order.find({ status: 'paid' }).select('total createdAt').lean(),
+      Product.countDocuments(), User.countDocuments(), Order.countDocuments(), Order.find({ status: 'paid' }).select('total createdAt').lean(),
     ]);
     const revenue = paidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
     const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(8).lean();
@@ -25,18 +22,11 @@ export const dashboard = async (_req, res, next) => {
   } catch (err) { next(err); }
 };
 
-export const listProducts = async (_req, res, next) => {
-  try { res.json(await Product.find().sort({ createdAt: -1 }).lean()); } catch (err) { next(err); }
-};
+export const listProducts = async (_req, res, next) => { try { res.json(await Product.find().sort({ createdAt: -1 }).lean()); } catch (err) { next(err); } };
 
 export const createProduct = async (req, res, next) => {
-  try {
-    const product = await Product.create(req.body);
-    res.status(201).json(product);
-  } catch (err) {
-    if (err?.name === 'ValidationError') return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') });
-    next(err);
-  }
+  try { res.status(201).json(await Product.create(req.body)); }
+  catch (err) { if (err?.name === 'ValidationError') return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') }); next(err); }
 };
 
 export const updateProduct = async (req, res, next) => {
@@ -44,23 +34,15 @@ export const updateProduct = async (req, res, next) => {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
-  } catch (err) {
-    if (err?.name === 'ValidationError') return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') });
-    next(err);
-  }
+  } catch (err) { if (err?.name === 'ValidationError') return res.status(400).json({ error: Object.values(err.errors).map((item) => item.message).join(' ') }); next(err); }
 };
 
 export const deleteProduct = async (req, res, next) => {
-  try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json({ message: 'Product deleted' });
-  } catch (err) { next(err); }
+  try { const product = await Product.findByIdAndDelete(req.params.id); if (!product) return res.status(404).json({ error: 'Product not found' }); res.json({ message: 'Product deleted' }); }
+  catch (err) { next(err); }
 };
 
-export const listUsers = async (_req, res, next) => {
-  try { res.json(await User.find().select('-passwordHash').sort({ createdAt: -1 }).lean()); } catch (err) { next(err); }
-};
+export const listUsers = async (_req, res, next) => { try { res.json(await User.find().select('-passwordHash').sort({ createdAt: -1 }).lean()); } catch (err) { next(err); } };
 
 export const updateUser = async (req, res, next) => {
   try {
@@ -79,12 +61,11 @@ export const resetUserPassword = async (req, res, next) => {
 
     const targetIsAdmin = user.role !== 'user';
     const actorIsSuperAdmin = req.user?.role === 'super_admin';
-    if (targetIsAdmin && !actorIsSuperAdmin) {
-      return res.status(403).json({ error: 'Only a super admin can reset an administrator password.' });
-    }
+    if (targetIsAdmin && !actorIsSuperAdmin) return res.status(403).json({ error: 'Only a super admin can reset an administrator password.' });
 
     const temporaryPassword = generateTemporaryPassword();
     user.passwordHash = await bcrypt.hash(temporaryPassword, SALT_ROUNDS);
+    user.passwordChangedAt = new Date();
     await user.save();
 
     res.json({ message: 'Password reset successfully. Share this temporary password securely with the user.', temporaryPassword });
@@ -92,27 +73,15 @@ export const resetUserPassword = async (req, res, next) => {
 };
 
 export const sales = async (_req, res, next) => {
-  try {
-    const orders = await Order.find({ status: 'paid' }).sort({ createdAt: -1 }).lean();
-    const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
-    const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((s, item) => s + Number(item.quantity || 0), 0), 0);
-    res.json({ totalRevenue, paidOrders: orders.length, totalItems, orders });
-  } catch (err) { next(err); }
+  try { const orders = await Order.find({ status: 'paid' }).sort({ createdAt: -1 }).lean(); const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total || 0), 0); const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((s, item) => s + Number(item.quantity || 0), 0), 0); res.json({ totalRevenue, paidOrders: orders.length, totalItems, orders }); }
+  catch (err) { next(err); }
 };
 
 export const reports = async (_req, res, next) => {
   try {
     const [topProducts, byDay] = await Promise.all([
-      Order.aggregate([
-        { $match: { status: 'paid' } }, { $unwind: '$items' },
-        { $group: { _id: '$items.productId', name: { $first: '$items.name' }, quantity: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } },
-        { $sort: { revenue: -1 } }, { $limit: 10 },
-      ]),
-      Order.aggregate([
-        { $match: { status: 'paid' } },
-        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, orders: { $sum: 1 }, revenue: { $sum: '$total' } } },
-        { $sort: { _id: 1 } },
-      ]),
+      Order.aggregate([{ $match: { status: 'paid' } }, { $unwind: '$items' }, { $group: { _id: '$items.productId', name: { $first: '$items.name' }, quantity: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } }, { $sort: { revenue: -1 } }, { $limit: 10 }]),
+      Order.aggregate([{ $match: { status: 'paid' } }, { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, orders: { $sum: 1 }, revenue: { $sum: '$total' } } }, { $sort: { _id: 1 } }]),
     ]);
     res.json({ topProducts, byDay });
   } catch (err) { next(err); }
