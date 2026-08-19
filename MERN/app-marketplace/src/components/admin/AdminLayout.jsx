@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { BarChart3, FolderTree, LayoutDashboard, LogOut, Package, Users } from 'lucide-react';
+import { BarChart3, FolderTree, LayoutDashboard, LogOut, Package, ShoppingCart, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
   { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/sales', label: 'Sales', icon: ShoppingCart },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
 ];
 
