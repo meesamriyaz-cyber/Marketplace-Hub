@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin, requireSuperAdmin } from '../middlewares/auth.js';
-import { dashboard, listProducts, createProduct, updateProduct, deleteProduct, listUsers, updateUser, sales, reports } from '../controllers/adminController.js';
+import { dashboard, listProducts, createProduct, updateProduct, deleteProduct, listUsers, updateUser, resetUserPassword, sales, reports } from '../controllers/adminController.js';
 import { listCategories, createCategory, updateCategory, deleteCategory } from '../controllers/categoryController.js';
 
 const router = Router();
@@ -16,6 +16,7 @@ router.put('/categories/:id', updateCategory);
 router.delete('/categories/:id', deleteCategory);
 router.get('/users', listUsers);
 router.put('/users/:id', updateUser);
+router.post('/users/:id/reset-password', resetUserPassword);
 router.get('/sales', sales);
 router.get('/reports', reports);
 router.get('/admin-users', requireSuperAdmin, listUsers);
