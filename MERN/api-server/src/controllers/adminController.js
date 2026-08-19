@@ -25,28 +25,22 @@ export const reports = async (req, res, next) => {
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return res.status(400).json({ error: 'Invalid report date range.' });
     if (start > end) return res.status(400).json({ error: 'Report start date cannot be after the end date.' });
 
-    const match = { createdAt: { $gte: start, $lte: end } };
-    const paidMatch = { ...match, status: 'paid' };
+    // Revenue reports are based on when payment was completed, not when the order was created.
+    // Older paid orders without paidAt fall back to createdAt so they remain reportable.
+    const paidDateExpr = { $ifNull: ['$payment.paidAt', '$createdAt'] };
+    const paidMatch = { status: 'paid', $expr: { $and: [{ $gte: [paidDateExpr, start] }, { $lte: [paidDateExpr, end] }] } };
+    const statusMatch = { createdAt: { $gte: start, $lte: end } };
     const format = granularity === 'monthly' ? '%Y-%m' : '%Y-%m-%d';
-
     const [summaryRows, statusRows, topProducts, trend] = await Promise.all([
       Order.aggregate([{ $match: paidMatch }, { $group: { _id: null, revenue: { $sum: '$total' }, orders: { $sum: 1 }, items: { $sum: { $sum: '$items.quantity' } } } }]),
-      Order.aggregate([{ $match: match }, { $group: { _id: '$status', count: { $sum: 1 }, value: { $sum: '$total' } } }]),
+      Order.aggregate([{ $match: statusMatch }, { $group: { _id: '$status', count: { $sum: 1 }, value: { $sum: '$total' } } }]),
       Order.aggregate([{ $match: paidMatch }, { $unwind: '$items' }, { $group: { _id: '$items.productId', name: { $first: '$items.name' }, quantity: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } }, { $sort: { revenue: -1 } }, { $limit: 10 }]),
-      Order.aggregate([{ $match: paidMatch }, { $group: { _id: { $dateToString: { format, date: '$createdAt' } }, orders: { $sum: 1 }, revenue: { $sum: '$total' }, items: { $sum: { $sum: '$items.quantity' } } } }, { $sort: { _id: 1 } }]),
+      Order.aggregate([{ $match: paidMatch }, { $group: { _id: { $dateToString: { format, date: paidDateExpr } }, orders: { $sum: 1 }, revenue: { $sum: '$total' }, items: { $sum: { $sum: '$items.quantity' } } } }, { $sort: { _id: 1 } }]),
     ]);
-
     const summary = summaryRows[0] || { revenue: 0, orders: 0, items: 0 };
     const statuses = { paid: { count: 0, value: 0 }, pending: { count: 0, value: 0 }, cancelled: { count: 0, value: 0 } };
     for (const row of statusRows) if (statuses[row._id]) statuses[row._id] = { count: row.count, value: row.value };
-    res.json({
-      range: { from: start.toISOString(), to: end.toISOString() },
-      granularity: granularity === 'monthly' ? 'monthly' : 'daily',
-      summary: { revenue: Number(summary.revenue || 0), orders: Number(summary.orders || 0), items: Number(summary.items || 0), averageOrderValue: summary.orders ? Number(summary.revenue || 0) / Number(summary.orders) : 0 },
-      statuses,
-      topProducts,
-      trend,
-    });
+    res.json({ range: { from: start.toISOString(), to: end.toISOString() }, granularity: granularity === 'monthly' ? 'monthly' : 'daily', summary: { revenue: Number(summary.revenue || 0), orders: Number(summary.orders || 0), items: Number(summary.items || 0), averageOrderValue: summary.orders ? Number(summary.revenue || 0) / Number(summary.orders) : 0 }, statuses, topProducts, trend });
   } catch (err) { next(err); }
 };
 export const listOrders = async (_req, res, next) => { try { res.json(await Order.find().sort({ createdAt: -1 }).lean()); } catch (err) { next(err); } };
