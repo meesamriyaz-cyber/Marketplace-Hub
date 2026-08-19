@@ -47,6 +47,3 @@ export const optionalAuth = async (req, res, next) => {
     next();
   }
 };
-
-export const requireAdmin = requireAdmin;
-export const requireSuperAdmin = requireSuperAdmin;
