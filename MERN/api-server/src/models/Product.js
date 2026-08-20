@@ -16,6 +16,14 @@ const productSchema = new mongoose.Schema({
   features: [{ type: String }],
   badge: { type: String },
   salesCount: { type: Number, default: 0, min: 0 },
+  app: {
+    isApp: { type: Boolean, default: false },
+    platform: { type: String, enum: ['android', 'windows', 'ios', 'web', 'multi'], default: 'android' },
+    version: { type: String, default: '' },
+    downloadUrl: { type: String, default: '' },
+    downloadEnabled: { type: Boolean, default: false },
+    trialDays: { type: Number, default: 7, min: 1, max: 365 },
+  },
 }, { timestamps: true });
 
 export const Product = mongoose.model('Product', productSchema);
