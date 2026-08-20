@@ -19,8 +19,12 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   const border = light ? '#ddd5c7' : '#2b313a';
   const green = light ? '#4f8067' : SITE_GREEN;
   const isApp = Boolean(product.app?.isApp);
+  const productId = product._id || product.id;
   const downloadReady = Boolean(isApp && product.app?.downloadEnabled && product.app?.downloadUrl);
-  const openDemo = () => { window.location.href = `/demo-app?productId=${encodeURIComponent(product._id)}`; };
+  const openDemo = () => {
+    if (!productId) return;
+    window.location.href = `/demo-app?productId=${encodeURIComponent(productId)}`;
+  };
   const download = () => { if (downloadReady) window.location.href = product.app.downloadUrl; else openDemo(); };
 
   return (
@@ -41,7 +45,7 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                   {isApp && <div className="mt-7 rounded-2xl border p-4" style={{ borderColor: 'rgba(211,168,63,.3)', background: light ? '#f7f1e4' : '#211d15' }}><div className="flex items-center justify-between gap-4"><div><div className="text-sm font-bold">7-day free trial</div><div className="mt-1 text-xs" style={{ color: muted }}>{downloadReady ? `Version ${product.app.version || 'latest'} · ${product.app.platform || 'app'}` : 'Demo download · trial activates on first launch'}</div></div><span className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(169,208,184,.14)', color: green }}>{downloadReady ? 'Available' : 'Demo'}</span></div></div>}
                   <div className="mt-8 flex flex-wrap items-center gap-4 border-t pt-7" style={{ borderColor: border }}>
                     {price(product.price) && !isApp && <div><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Price</div><div className="mt-1 text-3xl font-black" style={{ color: accent }}>{price(product.price)}</div></div>}
-                    {isApp ? <button type="button" onClick={download} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold" style={{ background: accent, color: '#201b10' }}><Download className="size-4" />{downloadReady ? 'Download & Start Free Trial' : 'Try Demo App'}<ArrowRight className="size-4" /></button> : <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>}
+                    {isApp ? <button type="button" onClick={download} disabled={!productId} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}><Download className="size-4" />{downloadReady ? 'Download & Start Free Trial' : 'Try Demo App'}<ArrowRight className="size-4" /></button> : <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>}
                     <button type="button" onClick={() => onFavorite?.(product)} className="inline-flex size-12 items-center justify-center rounded-full border" style={{ borderColor: 'rgba(211,168,63,.55)', background: isFavorite ? 'rgba(211,168,63,.14)' : 'transparent' }} aria-label="Favorite app"><Heart className={`size-5 ${isFavorite ? 'fill-current' : ''}`} style={{ color: accent }} /></button>
                   </div>
                 </div>
