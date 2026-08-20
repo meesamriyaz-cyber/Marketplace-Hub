@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema({
     startedAt: { type: Date, default: null },
     expiresAt: { type: Date, default: null },
   },
+  license: {
+    status: { type: String, enum: ['active', 'revoked'], default: null },
+    activatedAt: { type: Date, default: null },
+    expiresAt: { type: Date, default: null },
+    purchaseId: { type: String, default: null },
+    razorpayOrderId: { type: String, default: null },
+    razorpayPaymentId: { type: String, default: null },
+    lastValidatedAt: { type: Date, default: null },
+  },
 }, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);
