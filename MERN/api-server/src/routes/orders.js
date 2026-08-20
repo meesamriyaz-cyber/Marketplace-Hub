@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
 import { Cart } from '../models/Cart.js';
+import { License } from '../models/License.js';
 import { authenticate } from '../middlewares/auth.js';
 import { clearCart } from '../controllers/cartController.js';
 
@@ -35,6 +36,8 @@ router.post('/orders/app-purchase', authenticate, async (req, res) => {
   if (!productId) return res.status(400).json({ error: 'productId is required' });
   const product = await Product.findById(productId).lean();
   if (!product || !product.app?.isApp) return res.status(404).json({ error: 'Application not found' });
+  const existingLicense = await License.findOne({ userId: req.user._id, productId: product._id }).lean();
+  if (existingLicense?.status === 'active') return res.status(409).json({ error: 'Application is already licensed' });
   const existingPaid = await Order.findOne({ userId: req.user._id, status: 'paid', 'items.productId': product._id }).lean();
   if (existingPaid) return res.status(409).json({ error: 'Application is already purchased', orderId: existingPaid._id.toString() });
   const order = await Order.create({ userId: req.user._id, items: [{ productId: product._id, name: product.name, price: product.price, quantity: 1 }], customerEmail: req.user.email, total: product.price, currency: 'INR', status: 'pending' });
