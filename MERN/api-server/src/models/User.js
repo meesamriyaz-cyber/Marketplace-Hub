@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema({
   passwordVersion: { type: Number, default: 0 },
   role: { type: String, enum: ['user', 'admin', 'super_admin'], default: 'user' },
   isActive: { type: Boolean, default: true },
+  trial: {
+    startedAt: { type: Date, default: null },
+    expiresAt: { type: Date, default: null },
+  },
 }, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);
