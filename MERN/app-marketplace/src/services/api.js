@@ -12,10 +12,10 @@ async function request(path, options = {}) {
 
 export const api = {
   auth: { register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }), login: (payload) => request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }), me: () => request('/auth/me'), logout: () => request('/auth/logout', { method: 'POST' }) },
-  license: { status: () => request('/license/status'), activateTrial: () => request('/license/activate-trial', { method: 'POST' }), devExpireTrial: () => request('/license/dev/expire-trial', { method: 'POST' }) },
+  license: { status: (productId) => request(`/license/status?productId=${encodeURIComponent(productId)}`), activateTrial: (productId) => request('/license/activate-trial', { method: 'POST', body: JSON.stringify({ productId }) }), devExpireTrial: (productId) => request('/license/dev/expire-trial', { method: 'POST', body: JSON.stringify({ productId }) }) },
   products: { list: () => request('/products'), get: (id) => request(`/products/${id}`) },
   cart: { get: () => request('/cart').then((data) => data.items || []), add: (payload) => request('/cart', { method: 'POST', body: JSON.stringify(payload) }).then((data) => data.items || []), remove: (productId) => request(`/cart/${productId}`, { method: 'DELETE' }).then((data) => data.items || []) },
-  orders: { list: () => request('/orders'), create: () => request('/orders', { method: 'POST' }), get: (id) => request(`/orders/${id}`) },
+  orders: { list: () => request('/orders'), create: () => request('/orders', { method: 'POST' }), createAppPurchase: (productId) => request('/orders/app-purchase', { method: 'POST', body: JSON.stringify({ productId }) }), get: (id) => request(`/orders/${id}`) },
   payments: { createOrder: (orderId) => request('/payments/create-order', { method: 'POST', body: JSON.stringify({ orderId }) }), verify: (payload) => request('/payments/verify', { method: 'POST', body: JSON.stringify(payload) }) },
   contact: { submit: (payload) => request('/contact', { method: 'POST', body: JSON.stringify(payload) }) },
   admin: {
