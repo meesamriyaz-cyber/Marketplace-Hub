@@ -14,7 +14,7 @@ export default function DemoApp() {
   const [product, setProduct] = useState(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const productId = useMemo(() => new URLSearchParams(location.split('?')[1] || '').get('productId'), [location]);
+  const productId = useMemo(() => typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('productId') : null, [location]);
 
   const loadProduct = useCallback(async () => {
     if (!productId) return;
@@ -31,12 +31,7 @@ export default function DemoApp() {
 
   useEffect(() => { if (!authLoading && user) { loadProduct(); refresh(); } }, [authLoading, user, loadProduct, refresh]);
 
-  const startTrial = async () => {
-    setBusy(true); setMessage('');
-    try { setLicense(await api.license.activateTrial(productId)); }
-    catch (err) { setMessage(err?.message || 'Unable to start the trial.'); }
-    finally { setBusy(false); }
-  };
+  const startTrial = async () => { setBusy(true); setMessage(''); try { setLicense(await api.license.activateTrial(productId)); } catch (err) { setMessage(err?.message || 'Unable to start the trial.'); } finally { setBusy(false); } };
 
   const purchase = async () => {
     setBusy(true); setMessage('');
@@ -45,24 +40,7 @@ export default function DemoApp() {
       const payment = await api.payments.createOrder(order._id);
       const ready = await loadRazorpayScript();
       if (!ready || !window.Razorpay) throw new Error('Could not load the payment gateway.');
-      const razorpay = new window.Razorpay({
-        key: payment.keyId,
-        amount: payment.amount,
-        currency: payment.currency,
-        name: 'Cutting Edge Apps',
-        description: `${product?.name || 'Application'} — Full Version`,
-        order_id: payment.razorpayOrderId,
-        prefill: { name: user?.name, email: user?.email },
-        theme: { color: '#d3a83f' },
-        handler: async (response) => {
-          try {
-            await api.payments.verify({ orderId: order._id, razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature });
-            await refresh();
-          } catch (err) { setMessage(err?.message || 'Payment verification failed.'); }
-          finally { setBusy(false); }
-        },
-        modal: { ondismiss: () => setBusy(false) },
-      });
+      const razorpay = new window.Razorpay({ key: payment.keyId, amount: payment.amount, currency: payment.currency, name: 'Cutting Edge Apps', description: `${product?.name || 'Application'} — Full Version`, order_id: payment.razorpayOrderId, prefill: { name: user?.name, email: user?.email }, theme: { color: '#d3a83f' }, handler: async (response) => { try { await api.payments.verify({ orderId: order._id, razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature }); await refresh(); } catch (err) { setMessage(err?.message || 'Payment verification failed.'); } finally { setBusy(false); } }, modal: { ondismiss: () => setBusy(false) } });
       razorpay.on('payment.failed', () => { setMessage('Payment failed. Please try again.'); setBusy(false); });
       razorpay.open();
     } catch (err) { setMessage(err?.message || 'Unable to start purchase.'); setBusy(false); }
