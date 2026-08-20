@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Check, Heart, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowRight, Check, Heart, X } from 'lucide-react';
 
 const SITE_GOLD = '#d3a83f';
 const SITE_GREEN = '#a9d0b8';
@@ -9,8 +9,6 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   if (!product) return null;
   const features = Array.isArray(product.features) ? product.features.slice(0, 4) : [];
   const description = product.description || product.tagline || 'A practical business application designed to simplify everyday operations.';
-  // Keep the detail presentation tied to the marketplace design system rather than
-  // using per-app accent colors that can introduce unrelated pink/purple tones.
   const accent = SITE_GOLD;
   const shell = light ? '#f4f0e7' : '#0d1015';
   const panel = light ? '#fffdf8' : '#151a21';
@@ -20,6 +18,8 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   const faint = light ? '#82796d' : '#8f969f';
   const border = light ? '#ddd5c7' : '#2b313a';
   const green = light ? '#4f8067' : SITE_GREEN;
+  const isApp = product.app?.isApp === true;
+  const canDownload = isApp && product.app?.downloadEnabled === true && Boolean(product.app?.downloadUrl);
 
   return <AnimatePresence>
     {open && <motion.div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-md sm:p-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
@@ -33,14 +33,14 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                   <div className="absolute inset-[13px] rounded-[15px] border p-4" style={{ background: light ? 'linear-gradient(145deg,#eee9df,#d8d0c3)' : 'linear-gradient(145deg,#171d26,#080b10)', borderColor: light ? '#c9c0b2' : '#2d343e' }}>
                     <div className="absolute inset-[10px] rounded-[11px] border" style={{ borderColor: 'rgba(211,168,63,.28)', boxShadow: 'inset 0 0 35px rgba(211,168,63,.07)' }} />
                     <div className="relative h-full rounded-[10px] p-4">
-                      <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[.18em]" style={{ color: faint }}><span>Digital edition</span><span style={{ color: green }}>Ready to deploy</span></div>
+                      <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[.18em]" style={{ color: faint }}><span>Digital edition</span><span style={{ color: green }}>{isApp ? 'Ready to deploy' : 'Available now'}</span></div>
                       <div className="absolute left-1/2 top-1/2 w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-[14px] border p-5 text-center shadow-[0_14px_28px_rgba(0,0,0,.22)]" style={{ background: panel, borderColor: border }}>
                         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border" style={{ background: 'rgba(211,168,63,.12)', borderColor: 'rgba(211,168,63,.45)', color: accent }}><span className="text-xl font-black">{(product.name || 'A').slice(0, 1).toUpperCase()}</span></div>
                         <div className="mt-4 text-2xl font-black" style={{ color: text }}>{product.name || 'Application'}</div>
                         <div className="mt-2 text-[11px] leading-5" style={{ color: muted }}>{product.tagline || 'Built for modern business.'}</div>
-                        <div className="mt-4 flex items-center justify-center gap-2 text-[8px] font-bold uppercase tracking-[.15em]" style={{ color: faint }}><span>License</span><span>•</span><span>Instant access</span></div>
+                        <div className="mt-4 flex items-center justify-center gap-2 text-[8px] font-bold uppercase tracking-[.15em]" style={{ color: faint }}><span>{isApp ? '7-day trial' : 'License'}</span><span>•</span><span>{isApp ? 'Download' : 'Instant access'}</span></div>
                       </div>
-                      <div className="absolute bottom-2 left-0 right-0 flex justify-center"><span className="rounded-full border px-3 py-1 text-[8px] font-bold uppercase tracking-[.16em]" style={{ borderColor: 'rgba(211,168,63,.35)', color: accent, background: light ? 'rgba(255,253,248,.65)' : 'rgba(0,0,0,.2)' }}>Premium digital product</span></div>
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center"><span className="rounded-full border px-3 py-1 text-[8px] font-bold uppercase tracking-[.16em]" style={{ borderColor: 'rgba(211,168,63,.35)', color: accent, background: light ? 'rgba(255,253,248,.65)' : 'rgba(0,0,0,.2)' }}>{isApp ? 'Business application' : 'Premium digital product'}</span></div>
                     </div>
                   </div>
                 </motion.div>
@@ -66,9 +66,11 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
               {features.length > 0 && <div className="mt-7 grid gap-3 sm:grid-cols-2">{features.map((feature, index) => <div key={`${feature}-${index}`} className="flex gap-3 rounded-xl border p-3 text-sm" style={{ borderColor: border, background: panelSoft, color: text }}><Check className="mt-0.5 size-4 shrink-0" style={{ color: green }} />{feature}</div>)}</div>}
               <div className="mt-8 flex flex-wrap items-center gap-4 border-t pt-7" style={{ borderColor: border }}>
                 {price(product.price) && <div><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Price</div><div className="mt-1 text-3xl font-black" style={{ color: accent }}>{price(product.price)}</div></div>}
-                <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold shadow-lg transition hover:-translate-y-0.5" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>
+                {isApp && <div><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Trial</div><div className="mt-1 text-sm font-semibold" style={{ color: green }}>{product.app?.trialDays || 7}-day free trial</div></div>}
+                {isApp ? <a href={canDownload ? product.app.downloadUrl : undefined} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!canDownload) event.preventDefault(); }} className={`inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold shadow-lg transition ${canDownload ? 'hover:-translate-y-0.5' : 'cursor-not-allowed opacity-60'}`} style={{ background: accent, color: '#201b10' }} aria-disabled={!canDownload}><ArrowDownToLine className="size-4" />{canDownload ? 'Download & Start Free Trial' : 'Download Coming Soon'}</a> : <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold shadow-lg transition hover:-translate-y-0.5" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>}
                 <button type="button" onClick={() => onFavorite?.(product)} className="inline-flex size-12 items-center justify-center rounded-full border transition" style={{ borderColor: 'rgba(211,168,63,.55)', background: isFavorite ? 'rgba(211,168,63,.14)' : 'transparent' }} aria-label="Favorite app"><Heart className={`size-5 ${isFavorite ? 'fill-current' : ''}`} style={{ color: accent }} /></button>
               </div>
+              {isApp && !canDownload && <p className="mt-3 text-xs" style={{ color: faint }}>The app download will appear here once the release file and download URL are configured.</p>}
             </div>
           </div>
         </motion.div>
