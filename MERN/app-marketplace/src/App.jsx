@@ -17,11 +17,13 @@ import AdminUsers from '@/pages/AdminUsers';
 import AdminSales from '@/pages/AdminSales';
 import AdminReports from '@/pages/AdminReports';
 import AdminOrders from '@/pages/AdminOrders';
+import { useAuth } from '@/contexts/AuthContext';
 
-function AdminPage({ children }) { return <AdminRoute><AdminLayout>{children}</AdminRoute>; }
+function AdminPage({ children }) { return <AdminRoute><AdminLayout>{children}</AdminLayout></AdminRoute>; }
 
 export default function App() {
-  const { loading } = require('@/contexts/AuthContext').useAuth(); const [location] = useLocation();
+  const { loading } = useAuth();
+  const [location] = useLocation();
   const [theme, setTheme] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('theme') || 'dark' : 'dark');
   useEffect(() => { const root = document.documentElement; root.classList.toggle('light', theme === 'light'); root.classList.toggle('dark', theme !== 'light'); localStorage.setItem('theme', theme); }, [theme]);
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><div className="size-8 animate-spin rounded-full border-2 border-[#ee9d83] border-t-transparent" /></div>;
