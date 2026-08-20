@@ -12,7 +12,7 @@ async function request(path, options = {}) {
 
 export const api = {
   auth: { register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }), login: (payload) => request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }), me: () => request('/auth/me'), logout: () => request('/auth/logout', { method: 'POST' }) },
-  license: { status: () => request('/license/status') },
+  license: { status: () => request('/license/status'), activateTrial: () => request('/license/activate-trial', { method: 'POST' }) },
   products: { list: () => request('/products'), get: (id) => request(`/products/${id}`) },
   cart: { get: () => request('/cart').then((data) => data.items || []), add: (payload) => request('/cart', { method: 'POST', body: JSON.stringify(payload) }).then((data) => data.items || []), remove: (productId) => request(`/cart/${productId}`, { method: 'DELETE' }).then((data) => data.items || []) },
   orders: { list: () => request('/orders'), create: () => request('/orders', { method: 'POST' }), get: (id) => request(`/orders/${id}`) },
