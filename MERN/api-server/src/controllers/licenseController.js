@@ -41,3 +41,21 @@ export const activateTrial = async (req, res, next) => {
     return res.status(201).json(serializeLicense(user));
   } catch (err) { next(err); }
 };
+
+// Development-only test hook. This endpoint is unavailable when NODE_ENV=production.
+export const expireTrialForDevelopment = async (req, res, next) => {
+  try {
+    if (process.env.NODE_ENV === 'production') return res.status(404).json({ error: 'Not found' });
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role !== 'user') return res.status(400).json({ error: 'Development trial expiry is only available for customer accounts' });
+    if (user.license?.status === 'active') return res.status(400).json({ error: 'Cannot expire an account with an active paid license' });
+    if (!user.trial?.startedAt) return res.status(400).json({ error: 'No active trial exists for this account' });
+
+    const now = new Date();
+    user.trial.expiresAt = new Date(now.getTime() - 1000);
+    await user.save();
+    return res.json(serializeLicense(user, now));
+  } catch (err) { next(err); }
+};
