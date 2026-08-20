@@ -5,7 +5,6 @@ import NotFound from '@/components/layout/NotFound';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import AdminRoute from '@/components/layout/AdminRoute';
 import AdminLayout from '@/components/admin/AdminLayout';
-import TrialGate from '@/components/license/TrialGate';
 import HomePage from '@/pages/HomePage';
 import Login from '@/pages/login';
 import Register from '@/pages/register';
@@ -28,5 +27,5 @@ export default function App() {
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><div className="size-8 animate-spin rounded-full border-2 border-[#ee9d83] border-t-transparent" /></div>;
   const isAdminRoute = location === '/admin' || location.startsWith('/admin/');
   const application = <main><Switch><Route path="/" component={HomePage} /><Route path="/orders" component={() => <ProtectedRoute><Orders /></ProtectedRoute>} /><Route path="/admin" component={() => <AdminPage><AdminDashboard /></AdminPage>} /><Route path="/admin/products" component={() => <AdminPage><AdminProducts /></AdminPage>} /><Route path="/admin/categories" component={() => <AdminPage><AdminCategories /></AdminPage>} /><Route path="/admin/users" component={() => <AdminPage><AdminUsers /></AdminPage>} /><Route path="/admin/sales" component={() => <AdminPage><AdminSales /></AdminPage>} /><Route path="/admin/reports" component={() => <AdminPage><AdminReports /></AdminPage>} /><Route path="/admin/orders" component={() => <AdminPage><AdminOrders /></AdminPage>} /><Route path="/login" component={Login} /><Route path="/register" component={Register} /><Route component={NotFound} /></Switch></main>;
-  return <div className="market-shell"><div className="grain" />{!isAdminRoute && <Navbar theme={theme} onToggleTheme={() => setTheme(value => value === 'dark' ? 'light' : 'dark')} />}{isAdminRoute ? application : <TrialGate>{application}</TrialGate>}</div>;
+  return <div className="market-shell"><div className="grain" />{!isAdminRoute && <Navbar theme={theme} onToggleTheme={() => setTheme(value => value === 'dark' ? 'light' : 'dark')} />}{application}</div>;
 }
