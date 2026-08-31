@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('token');
@@ -10,6 +10,7 @@ async function request(path, options = {}) {
   return data;
 }
 
+export { API_BASE };
 export const api = {
   auth: { register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }), login: (payload) => request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }), me: () => request('/auth/me'), logout: () => request('/auth/logout', { method: 'POST' }) },
   license: { status: (productId) => request(`/license/status?productId=${encodeURIComponent(productId)}`), activateTrial: (productId) => request('/license/activate-trial', { method: 'POST', body: JSON.stringify({ productId }) }), devExpireTrial: (productId) => request('/license/dev/expire-trial', { method: 'POST', body: JSON.stringify({ productId }) }) },
