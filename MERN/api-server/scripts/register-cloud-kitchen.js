@@ -7,7 +7,7 @@ const product = {
   category: 'Restaurants',
   tagline: 'Complete restaurant POS, kitchen and online ordering system.',
   description: 'A Windows restaurant management application for point-of-sale, kitchen operations, inventory and online customer ordering.',
-  price: 0,
+  price: 9999,
   creator: 'Cutting Edge',
   initials: 'CK',
   rating: 5,
@@ -33,8 +33,8 @@ const product = {
   },
 };
 
-const uri = process.env.MONGO_URI;
-if (!uri) throw new Error('MONGO_URI is required');
+const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (!uri) throw new Error('MONGO_URI or MONGODB_URI is required');
 
 await mongoose.connect(uri);
 
@@ -45,5 +45,6 @@ const saved = existing
 
 console.log(`Cloud Kitchen product ${existing ? 'updated' : 'created'}: ${saved._id}`);
 console.log('Product ID:', saved._id.toString());
+console.log('Price (INR):', saved.price);
 
 await mongoose.disconnect();
