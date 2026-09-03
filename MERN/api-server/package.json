@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "register-cloud-kitchen": "node scripts/register-cloud-kitchen.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
