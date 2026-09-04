@@ -21,6 +21,6 @@ router.use(paymentsRouter);
 router.use(contactRouter);
 router.use('/admin', adminRouter);
 router.use('/license', licenseRouter);
-router.use('/admin', cloudKitchenRegistrationRouter);
+router.use(cloudKitchenRegistrationRouter);
 
 export default router;
