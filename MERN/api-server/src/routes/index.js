@@ -8,7 +8,6 @@ import paymentsRouter from './payments.js';
 import contactRouter from './contact.js';
 import adminRouter from './admin.js';
 import licenseRouter from './license.js';
-import cloudKitchenRegistrationRouter from './cloudKitchenRegistration.js';
 
 const router = Router();
 
@@ -21,6 +20,5 @@ router.use(paymentsRouter);
 router.use(contactRouter);
 router.use('/admin', adminRouter);
 router.use('/license', licenseRouter);
-router.use(cloudKitchenRegistrationRouter);
 
 export default router;
