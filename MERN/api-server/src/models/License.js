@@ -13,6 +13,12 @@ const licenseSchema = new mongoose.Schema({
   purchaseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', default: null },
   razorpayOrderId: { type: String, default: null },
   razorpayPaymentId: { type: String, default: null },
+  activationCodeHash: { type: String, default: null, index: true },
+  activationCodeExpiresAt: { type: Date, default: null },
+  activationCodeConsumedAt: { type: Date, default: null },
+  deviceId: { type: String, default: null, index: true },
+  deviceSecretHash: { type: String, default: null },
+  deviceActivatedAt: { type: Date, default: null },
   lastValidatedAt: { type: Date, default: null },
 }, { timestamps: true });
 
