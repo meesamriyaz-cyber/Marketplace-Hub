@@ -3,6 +3,6 @@ import { registerCloudKitchen } from '../controllers/cloudKitchenRegistrationCon
 
 const router = Router();
 
-router.post('/register-cloud-kitchen', registerCloudKitchen);
+router.post('/cloud-kitchen/register', registerCloudKitchen);
 
 export default router;
