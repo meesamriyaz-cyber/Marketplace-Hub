@@ -22,7 +22,9 @@ export const api = {
   products: { list: () => request('/products'), get: (id) => request(`/products/${id}`) },
   cart: { get: () => request('/cart').then((data) => data.items || []), add: (payload) => request('/cart', { method: 'POST', body: JSON.stringify(payload) }).then((data) => data.items || []), remove: (productId) => request(`/cart/${productId}`, { method: 'DELETE' }).then((data) => data.items || []) },
   orders: { list: () => request('/orders'), create: () => request('/orders', { method: 'POST' }), createAppPurchase: (productId) => request('/orders/app-purchase', { method: 'POST', body: JSON.stringify({ productId }) }), get: (id) => request(`/orders/${id}`) },
-  payments: { createOrder: (orderId) => request('/payments/create-order', { method: 'POST', body: JSON.stringify({ orderId })), verify: (payload) => request('/payments/verify', { method: 'POST', body: JSON.stringify(payload)) },
+  payments: {
+    createOrder: (orderId) => request('/payments/create-order', { method: 'POST', body: JSON.stringify({ orderId }) }),
+    verify: (payload) => request('/payments/verify', { method: 'POST', body: JSON.stringify(payload) }),
   },
   contact: { submit: (payload) => request('/contact', { method: 'POST', body: JSON.stringify(payload })) },
   admin: {
