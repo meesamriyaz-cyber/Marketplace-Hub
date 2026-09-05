@@ -1,11 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Check, ChefHat, Download, Heart, ShoppingCart, UtensilsCrossed, X } from 'lucide-react';
+import { ArrowRight, Check, ChefHat, Copy, Download, Heart, ShoppingCart, UtensilsCrossed, X } from 'lucide-react';
+import { useState } from 'react';
+import { api } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const SITE_GOLD = '#d3a83f';
 const SITE_GREEN = '#a9d0b8';
 const price = (value) => value === undefined || value === null || value === '' ? '' : `₹${Number(value).toLocaleString('en-IN')}`;
 
 export default function AppPackageReveal({ product, open, onClose, onAddToCart, onFavorite, isFavorite = false, light = false }) {
+  const { isAuthenticated } = useAuth();
+  const [activation, setActivation] = useState(null);
+  const [activating, setActivating] = useState(false);
   if (!product) return null;
   const features = Array.isArray(product.features) ? product.features.slice(0, 4) : [];
   const description = product.description || product.tagline || 'A practical business application designed to simplify everyday operations.';
@@ -22,11 +29,39 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   const productId = product._id || product.id;
   const downloadReady = Boolean(isApp && product.app?.downloadEnabled && product.app?.downloadUrl);
   const isCloudKitchen = String(product.name || '').toLowerCase() === 'cloud kitchen';
+
   const openDemo = () => {
     if (!productId) return;
     window.location.href = `/demo-app?productId=${encodeURIComponent(productId)}`;
   };
   const download = () => { if (downloadReady) window.location.href = product.app.downloadUrl; else openDemo(); };
+  const startTrial = async () => {
+    if (!productId) return;
+    if (!isAuthenticated) {
+      toast.error('Please sign in to start your free trial');
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+    setActivating(true);
+    try {
+      const result = await api.license.activationCode(productId);
+      setActivation(result);
+      toast.success('Your 7-day trial is ready');
+    } catch (err) {
+      toast.error(err.message || 'Could not start the free trial');
+    } finally {
+      setActivating(false);
+    }
+  };
+  const copyCode = async () => {
+    if (!activation?.code) return;
+    try {
+      await navigator.clipboard.writeText(activation.code);
+      toast.success('Activation code copied');
+    } catch {
+      toast.error('Could not copy the code');
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -66,15 +101,29 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                   {features.length > 0 && <div className="mt-7 grid gap-3 sm:grid-cols-2">{features.map((feature, index) => <div key={`${feature}-${index}`} className="flex gap-3 rounded-xl border p-3 text-sm" style={{ borderColor: border, background: panelSoft }}><Check className="mt-0.5 size-4 shrink-0" style={{ color: green }} />{feature}</div>)}</div>}
                   {isApp && <div className="mt-7 rounded-2xl border p-4" style={{ borderColor: 'rgba(211,168,63,.3)', background: light ? '#f7f1e4' : '#211d15' }}>
                     <div className="flex items-center justify-between gap-4">
-                      <div><div className="text-sm font-bold">7-day free trial</div><div className="mt-1 text-xs" style={{ color: muted }}>{downloadReady ? `Version ${product.app.version || 'latest'} · ${product.app.platform || 'app'}` : 'Trial activates when the application is launched'}</div></div>
+                      <div><div className="text-sm font-bold">7-day free trial</div><div className="mt-1 text-xs" style={{ color: muted }}>{downloadReady ? `Version ${product.app.version || 'latest'} · ${product.app.platform || 'app'}` : 'Trial starts when you activate the application'}</div></div>
                       <span className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(169,208,184,.14)', color: green }}>7 DAYS</span>
                     </div>
                   </div>}
+
+                  {activation?.code && <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'rgba(169,208,184,.38)', background: light ? '#eef7f1' : '#15231c' }}>
+                    <div className="text-[10px] font-bold uppercase tracking-[.18em]" style={{ color: green }}>Your activation code</div>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <div className="rounded-xl border px-4 py-2.5 font-mono text-xl font-black tracking-[.2em]" style={{ borderColor: 'rgba(169,208,184,.32)', background: panel, color: text }}>{activation.code}</div>
+                      <button type="button" onClick={copyCode} className="inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold" style={{ borderColor: border, background: panelSoft, color: text }}><Copy className="size-4" />Copy</button>
+                    </div>
+                    <div className="mt-2 text-xs" style={{ color: muted }}>Enter this code in Cloud Kitchen during first-run setup. The code is valid for 10 minutes.</div>
+                  </div>}
+
                   <div className="mt-8 flex flex-wrap items-end gap-4 border-t pt-7" style={{ borderColor: border }}>
                     {isApp && price(product.price) && <div className="mr-auto"><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Full version</div><div className="mt-1 text-3xl font-black" style={{ color: accent }}>{price(product.price)} <span className="text-xs font-semibold" style={{ color: faint }}>one-time</span></div></div>}
                     {price(product.price) && !isApp && <div><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Price</div><div className="mt-1 text-3xl font-black" style={{ color: accent }}>{price(product.price)}</div></div>}
                     {isApp ? <>
-                      <button type="button" onClick={download} disabled={!productId} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}><Download className="size-4" />{downloadReady ? 'Download & Start Free Trial' : 'Start 7-Day Free Trial'}<ArrowRight className="size-4" /></button>
+                      <button type="button" onClick={downloadReady ? download : startTrial} disabled={!productId || activating} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}>
+                        {downloadReady ? <Download className="size-4" /> : null}
+                        {activating ? 'Preparing Trial...' : downloadReady ? 'Download & Start Free Trial' : activation?.code ? 'Code Generated' : 'Start 7-Day Free Trial'}
+                        <ArrowRight className="size-4" />
+                      </button>
                       {price(product.price) && <button type="button" onClick={() => onAddToCart?.(product)} disabled={!productId} className="inline-flex items-center gap-2 rounded-full border px-5 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}><ShoppingCart className="size-4" />Buy Full Version</button>}
                     </> : <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>}
                     <button type="button" onClick={() => onFavorite?.(product)} className="inline-flex size-12 items-center justify-center rounded-full border" style={{ borderColor: 'rgba(211,168,63,.55)', background: isFavorite ? 'rgba(211,168,63,.14)' : 'transparent' }} aria-label="Favorite app"><Heart className={`size-5 ${isFavorite ? 'fill-current' : ''}`} style={{ color: accent }} /></button>
