@@ -26,7 +26,7 @@ export const api = {
     createOrder: (orderId) => request('/payments/create-order', { method: 'POST', body: JSON.stringify({ orderId }) }),
     verify: (payload) => request('/payments/verify', { method: 'POST', body: JSON.stringify(payload) }),
   },
-  contact: { submit: (payload) => request('/contact', { method: 'POST', body: JSON.stringify(payload })) },
+  contact: { submit: (payload) => request('/contact', { method: 'POST', body: JSON.stringify(payload) }) },
   admin: {
     dashboard: () => request('/admin/dashboard'), products: () => request('/admin/products'), createProduct: (payload) => request('/admin/products', { method: 'POST', body: JSON.stringify(payload) }), updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) }), deleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE' }),
     categories: () => request('/admin/categories'), createCategory: (payload) => request('/admin/categories', { method: 'POST', body: JSON.stringify(payload) }), updateCategory: (id, payload) => request(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(payload) }), deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE' }),
