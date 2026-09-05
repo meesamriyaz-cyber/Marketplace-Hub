@@ -27,8 +27,9 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   const green = light ? '#4f8067' : SITE_GREEN;
   const isApp = Boolean(product.app?.isApp);
   const productId = product._id || product.id;
-  const downloadReady = Boolean(isApp && product.app?.downloadEnabled && product.app?.downloadUrl);
   const isCloudKitchen = String(product.name || '').toLowerCase() === 'cloud kitchen';
+  // Cloud Kitchen is not downloadable yet. Never route it to the legacy demo-app URL.
+  const downloadReady = Boolean(isApp && !isCloudKitchen && product.app?.downloadEnabled && product.app?.downloadUrl);
 
   const openDemo = () => {
     if (!productId) return;
