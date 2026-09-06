@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Check, ChefHat, Copy, Download, Heart, ShoppingCart, UtensilsCrossed, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -13,6 +13,8 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   const { isAuthenticated } = useAuth();
   const [activation, setActivation] = useState(null);
   const [activating, setActivating] = useState(false);
+  const [license, setLicense] = useState(null);
+  const [licenseLoading, setLicenseLoading] = useState(false);
   if (!product) return null;
   const features = Array.isArray(product.features) ? product.features.slice(0, 4) : [];
   const description = product.description || product.tagline || 'A practical business application designed to simplify everyday operations.';
@@ -31,6 +33,26 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   // Cloud Kitchen is not downloadable yet. Never route it to the legacy demo-app URL.
   const downloadReady = Boolean(isApp && !isCloudKitchen && product.app?.downloadEnabled && product.app?.downloadUrl);
 
+  useEffect(() => {
+    let cancelled = false;
+    setActivation(null);
+    setLicense(null);
+    if (!open || !isApp || !productId || !isAuthenticated) return undefined;
+    setLicenseLoading(true);
+    api.license.status(productId)
+      .then((result) => { if (!cancelled) setLicense(result); })
+      .catch(() => { if (!cancelled) setLicense({ status: 'unknown' }); })
+      .finally(() => { if (!cancelled) setLicenseLoading(false); });
+    return () => { cancelled = true; };
+  }, [open, isApp, productId, isAuthenticated]);
+
+  const licenseStatus = license?.status;
+  const isOwned = licenseStatus === 'active';
+  const isTrial = licenseStatus === 'trial';
+  const isExpired = licenseStatus === 'expired';
+  const canGenerateCode = isOwned || isTrial;
+  const licenseTitle = isOwned ? 'Full version active' : isTrial ? '7-day trial active' : isExpired ? 'Trial expired' : '7-day free trial';
+
   const openDemo = () => {
     if (!productId) return;
     window.location.href = `/demo-app?productId=${encodeURIComponent(productId)}`;
@@ -47,7 +69,8 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
     try {
       const result = await api.license.activationCode(productId);
       setActivation(result);
-      toast.success('Your 7-day trial is ready');
+      setLicense((current) => current ? { ...current, status: result.status } : { status: result.status });
+      toast.success(result.status === 'active' ? 'Activation code generated' : 'Your 7-day trial is ready');
     } catch (err) {
       toast.error(err.message || 'Could not start the free trial');
     } finally {
@@ -102,8 +125,8 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                   {features.length > 0 && <div className="mt-7 grid gap-3 sm:grid-cols-2">{features.map((feature, index) => <div key={`${feature}-${index}`} className="flex gap-3 rounded-xl border p-3 text-sm" style={{ borderColor: border, background: panelSoft }}><Check className="mt-0.5 size-4 shrink-0" style={{ color: green }} />{feature}</div>)}</div>}
                   {isApp && <div className="mt-7 rounded-2xl border p-4" style={{ borderColor: 'rgba(211,168,63,.3)', background: light ? '#f7f1e4' : '#211d15' }}>
                     <div className="flex items-center justify-between gap-4">
-                      <div><div className="text-sm font-bold">7-day free trial</div><div className="mt-1 text-xs" style={{ color: muted }}>{downloadReady ? `Version ${product.app.version || 'latest'} · ${product.app.platform || 'app'}` : 'Trial starts when you activate the application'}</div></div>
-                      <span className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(169,208,184,.14)', color: green }}>7 DAYS</span>
+                      <div><div className="text-sm font-bold">{licenseLoading ? 'Checking license…' : licenseTitle}</div><div className="mt-1 text-xs" style={{ color: muted }}>{isOwned ? 'You own this application. Your full version license is active.' : isTrial ? `${license?.trial?.daysRemaining ?? ''} day(s) remaining · Upgrade anytime` : downloadReady ? `Version ${product.app.version || 'latest'} · ${product.app.platform || 'app'}` : 'Trial starts when you activate the application'}</div></div>
+                      <span className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ background: isOwned ? 'rgba(169,208,184,.22)' : 'rgba(169,208,184,.14)', color: green }}>{isOwned ? 'OWNED' : isTrial ? 'TRIAL' : '7 DAYS'}</span>
                     </div>
                   </div>}
 
@@ -120,12 +143,19 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                     {isApp && price(product.price) && <div className="mr-auto"><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Full version</div><div className="mt-1 text-3xl font-black" style={{ color: accent }}>{price(product.price)} <span className="text-xs font-semibold" style={{ color: faint }}>one-time</span></div></div>}
                     {price(product.price) && !isApp && <div><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Price</div><div className="mt-1 text-3xl font-black" style={{ color: accent }}>{price(product.price)}</div></div>}
                     {isApp ? <>
-                      <button type="button" onClick={downloadReady ? download : startTrial} disabled={!productId || activating} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}>
-                        {downloadReady ? <Download className="size-4" /> : null}
-                        {activating ? 'Preparing Trial...' : downloadReady ? 'Download & Start Free Trial' : activation?.code ? 'Code Generated' : 'Start 7-Day Free Trial'}
-                        <ArrowRight className="size-4" />
-                      </button>
-                      {price(product.price) && <button type="button" onClick={() => onAddToCart?.(product)} disabled={!productId} className="inline-flex items-center gap-2 rounded-full border px-5 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}><ShoppingCart className="size-4" />Buy Full Version</button>}
+                      {canGenerateCode ? (
+                        <button type="button" onClick={startTrial} disabled={!productId || activating || licenseLoading} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}>
+                          {activating ? 'Generating Code...' : activation?.code ? 'Generate New Code' : 'Generate Activation Code'}
+                          <ArrowRight className="size-4" />
+                        </button>
+                      ) : (
+                        <button type="button" onClick={downloadReady ? download : startTrial} disabled={!productId || activating || licenseLoading} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}>
+                          {downloadReady ? <Download className="size-4" /> : null}
+                          {activating ? 'Preparing Trial...' : 'Start 7-Day Free Trial'}
+                          <ArrowRight className="size-4" />
+                        </button>
+                      )}
+                      {!isOwned && price(product.price) && <button type="button" onClick={() => onAddToCart?.(product)} disabled={!productId || licenseLoading} className="inline-flex items-center gap-2 rounded-full border px-5 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}><ShoppingCart className="size-4" />{isTrial ? 'Upgrade to Full Version' : 'Buy Full Version'}</button>}
                     </> : <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>}
                     <button type="button" onClick={() => onFavorite?.(product)} className="inline-flex size-12 items-center justify-center rounded-full border" style={{ borderColor: 'rgba(211,168,63,.55)', background: isFavorite ? 'rgba(211,168,63,.14)' : 'transparent' }} aria-label="Favorite app"><Heart className={`size-5 ${isFavorite ? 'fill-current' : ''}`} style={{ color: accent }} /></button>
                   </div>
