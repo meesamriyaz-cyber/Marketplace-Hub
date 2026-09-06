@@ -168,6 +168,32 @@ export const getDeviceLicenseStatus = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+export const transferDevice = async (req, res, next) => {
+  try {
+    const { product, error } = await getApp(req);
+    if (error) return res.status(400).json({ error });
+    const license = await License.findOne({ userId: req.user._id, productId: product._id });
+    if (!license) return res.status(404).json({ error: 'No license exists for this application' });
+    const now = new Date();
+    if (license.status === 'trial' && license.trial?.expiresAt && license.trial.expiresAt <= now) license.status = 'expired';
+    if (license.status === 'active' && license.expiresAt && license.expiresAt <= now) license.status = 'expired';
+    if (!['trial', 'active'].includes(license.status)) return res.status(403).json({ error: 'License is not eligible for device transfer' });
+    if (!license.deviceId) return res.status(400).json({ error: 'No active device to transfer' });
+
+    license.deviceId = null;
+    license.deviceSecretHash = null;
+    license.deviceActivatedAt = null;
+    license.activationCodeHash = null;
+    license.activationCodeExpiresAt = null;
+    license.activationCodeConsumedAt = null;
+    license.lastValidatedAt = now;
+    license.markModified('deviceId');
+    await license.save();
+
+    return res.json({ productId: product._id.toString(), status: license.status, transferredAt: now.toISOString(), readyForActivation: true });
+  } catch (err) { next(err); }
+};
+
 export const expireTrialForDevelopment = async (req, res, next) => {
   try {
     if (process.env.NODE_ENV === 'production') return res.status(404).json({ error: 'Not found' });
