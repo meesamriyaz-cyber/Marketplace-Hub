@@ -153,6 +153,15 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                     </div>}
                   </div>}
 
+                  {transferConfirm && <div className="mt-5 rounded-2xl border p-5" style={{ borderColor: 'rgba(211,168,63,.5)', background: light ? '#f7f1e4' : '#211d15' }}>
+                    <div className="text-sm font-black">Transfer license to a new device?</div>
+                    <p className="mt-2 text-xs leading-5" style={{ color: muted }}>This will immediately deactivate Cloud Kitchen on your current device. After transfer, generate a new activation code and enter it on the new computer.</p>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <button type="button" onClick={() => setTransferConfirm(false)} disabled={transferring} className="rounded-full border px-4 py-2.5 text-xs font-bold" style={{ borderColor: border, color: text }}>Cancel</button>
+                      <button type="button" onClick={transferDevice} disabled={transferring} className="rounded-full px-4 py-2.5 text-xs font-bold disabled:opacity-50" style={{ background: accent, color: '#201b10' }}>{transferring ? 'Transferring...' : 'Transfer License'}</button>
+                    </div>
+                  </div>}
+
                   {activation?.code && <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'rgba(169,208,184,.38)', background: light ? '#eef7f1' : '#15231c' }}>
                     <div className="text-[10px] font-bold uppercase tracking-[.18em]" style={{ color: green }}>Your activation code</div>
                     <div className="mt-2 flex flex-wrap items-center gap-3">
