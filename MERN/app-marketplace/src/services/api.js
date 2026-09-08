@@ -18,6 +18,7 @@ export const api = {
     activateTrial: (productId) => request('/license/activate-trial', { method: 'POST', body: JSON.stringify({ productId }) }),
     activationCode: (productId) => request('/license/activation-code', { method: 'POST', body: JSON.stringify({ productId }) }),
     devExpireTrial: (productId) => request('/license/dev/expire-trial', { method: 'POST', body: JSON.stringify({ productId }) }),
+    transferDevice: (productId) => request('/license/transfer-device', { method: 'POST', body: JSON.stringify({ productId }) }),
   },
   products: { list: () => request('/products'), get: (id) => request(`/products/${id}`) },
   cart: { get: () => request('/cart').then((data) => data.items || []), add: (payload) => request('/cart', { method: 'POST', body: JSON.stringify(payload) }).then((data) => data.items || []), remove: (productId) => request(`/cart/${productId}`, { method: 'DELETE' }).then((data) => data.items || []) },
