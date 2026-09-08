@@ -147,6 +147,10 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                       <div><div className="text-sm font-bold">{licenseLoading ? 'Checking license…' : licenseTitle}</div><div className="mt-1 text-xs" style={{ color: muted }}>{isOwned ? 'You own this application. Your full version license is active.' : isTrial ? `${license?.trial?.daysRemaining ?? ''} day(s) remaining · Upgrade anytime` : downloadReady ? `Version ${product.app.version || 'latest'} · ${product.app.platform || 'app'}` : 'Trial starts when you activate the application'}</div></div>
                       <span className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ background: isOwned ? 'rgba(169,208,184,.22)' : 'rgba(169,208,184,.14)', color: green }}>{isOwned ? 'OWNED' : isTrial ? 'TRIAL' : '7 DAYS'}</span>
                     </div>
+                    {isOwned && <div className="mt-4 border-t pt-4" style={{ borderColor: 'rgba(211,168,63,.2)' }}>
+                      <button type="button" onClick={() => setTransferConfirm(true)} disabled={transferring || licenseLoading} className="inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}>Transfer to New Device <ArrowRight className="size-4" /></button>
+                      <div className="mt-2 text-[11px]" style={{ color: faint }}>Single-device license · Transfers deactivate the currently activated device.</div>
+                    </div>}
                   </div>}
 
                   {activation?.code && <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'rgba(169,208,184,.38)', background: light ? '#eef7f1' : '#15231c' }}>
@@ -174,7 +178,6 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                           <ArrowRight className="size-4" />
                         </button>
                       )}
-                      {isOwned && <button type="button" onClick={() => setTransferConfirm(true)} disabled={transferring || licenseLoading} className="inline-flex items-center gap-2 rounded-full border px-5 py-3.5 text-sm font-bold disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}>Transfer to New Device</button>}
                       {!isOwned && price(product.price) && <button type="button" onClick={() => onAddToCart?.(product)} disabled={!productId || licenseLoading} className="inline-flex items-center gap-2 rounded-full border px-5 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}><ShoppingCart className="size-4" />{isTrial ? 'Upgrade to Full Version' : 'Buy Full Version'}</button>}
                     </> : <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>}
                     <button type="button" onClick={() => onFavorite?.(product)} className="inline-flex size-12 items-center justify-center rounded-full border" style={{ borderColor: 'rgba(211,168,63,.55)', background: isFavorite ? 'rgba(211,168,63,.14)' : 'transparent' }} aria-label="Favorite app"><Heart className={`size-5 ${isFavorite ? 'fill-current' : ''}`} style={{ color: accent }} /></button>
