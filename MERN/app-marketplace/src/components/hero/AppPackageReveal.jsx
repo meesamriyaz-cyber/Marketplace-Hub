@@ -15,6 +15,8 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   const [activating, setActivating] = useState(false);
   const [license, setLicense] = useState(null);
   const [licenseLoading, setLicenseLoading] = useState(false);
+  const [transferConfirm, setTransferConfirm] = useState(false);
+  const [transferring, setTransferring] = useState(false);
   if (!product) return null;
   const features = Array.isArray(product.features) ? product.features.slice(0, 4) : [];
   const description = product.description || product.tagline || 'A practical business application designed to simplify everyday operations.';
@@ -37,6 +39,7 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
     let cancelled = false;
     setActivation(null);
     setLicense(null);
+    setTransferConfirm(false);
     if (!open || !isApp || !productId || !isAuthenticated) return undefined;
     setLicenseLoading(true);
     api.license.status(productId)
@@ -50,7 +53,7 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
   const isOwned = licenseStatus === 'active';
   const isTrial = licenseStatus === 'trial';
   const isExpired = licenseStatus === 'expired';
-  const canGenerateCode = isOwned || isTrial;
+  const canGenerateCode = (isOwned && license?.deviceBound === false) || isTrial || isOwned;
   const licenseTitle = isOwned ? 'Full version active' : isTrial ? '7-day trial active' : isExpired ? 'Trial expired' : '7-day free trial';
 
   const openDemo = () => {
@@ -77,6 +80,22 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
       setActivating(false);
     }
   };
+  const transferDevice = async () => {
+    if (!productId || !isOwned) return;
+    setTransferring(true);
+    try {
+      await api.license.transferDevice(productId);
+      setActivation(null);
+      setLicense((current) => ({ ...(current || {}), status: 'active', deviceBound: false }));
+      setTransferConfirm(false);
+      toast.success('License transferred. Generate a new activation code for your new device.');
+    } catch (err) {
+      toast.error(err.message || 'Could not transfer the license');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
   const copyCode = async () => {
     if (!activation?.code) return;
     try {
@@ -144,7 +163,7 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                     {price(product.price) && !isApp && <div><div className="text-[10px] uppercase tracking-[.18em]" style={{ color: faint }}>Price</div><div className="mt-1 text-3xl font-black" style={{ color: accent }}>{price(product.price)}</div></div>}
                     {isApp ? <>
                       {canGenerateCode ? (
-                        <button type="button" onClick={startTrial} disabled={!productId || activating || licenseLoading} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}>
+                        <button type="button" onClick={startTrial} disabled={!productId || activating || licenseLoading || transferring} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ background: accent, color: '#201b10' }}>
                           {activating ? 'Generating Code...' : activation?.code ? 'Generate New Code' : 'Generate Activation Code'}
                           <ArrowRight className="size-4" />
                         </button>
@@ -155,6 +174,7 @@ export default function AppPackageReveal({ product, open, onClose, onAddToCart, 
                           <ArrowRight className="size-4" />
                         </button>
                       )}
+                      {isOwned && <button type="button" onClick={() => setTransferConfirm(true)} disabled={transferring || licenseLoading} className="inline-flex items-center gap-2 rounded-full border px-5 py-3.5 text-sm font-bold disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}>Transfer to New Device</button>}
                       {!isOwned && price(product.price) && <button type="button" onClick={() => onAddToCart?.(product)} disabled={!productId || licenseLoading} className="inline-flex items-center gap-2 rounded-full border px-5 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: 'rgba(211,168,63,.55)', background: 'transparent', color: text }}><ShoppingCart className="size-4" />{isTrial ? 'Upgrade to Full Version' : 'Buy Full Version'}</button>}
                     </> : <button type="button" onClick={() => onAddToCart?.(product)} className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold" style={{ background: accent, color: '#201b10' }}>Get this app <ArrowRight className="size-4" /></button>}
                     <button type="button" onClick={() => onFavorite?.(product)} className="inline-flex size-12 items-center justify-center rounded-full border" style={{ borderColor: 'rgba(211,168,63,.55)', background: isFavorite ? 'rgba(211,168,63,.14)' : 'transparent' }} aria-label="Favorite app"><Heart className={`size-5 ${isFavorite ? 'fill-current' : ''}`} style={{ color: accent }} /></button>
