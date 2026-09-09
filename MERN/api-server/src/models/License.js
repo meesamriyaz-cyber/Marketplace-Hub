@@ -18,6 +18,10 @@ const licenseSchema = new mongoose.Schema({
   activationCodeConsumedAt: { type: Date, default: null },
   deviceId: { type: String, default: null, index: true },
   deviceSecretHash: { type: String, default: null },
+  machineFingerprintHash: {
+  type: String,
+  default: null,
+},
   deviceActivatedAt: { type: Date, default: null },
   lastValidatedAt: { type: Date, default: null },
 }, { timestamps: true });

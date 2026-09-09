@@ -110,62 +110,248 @@ export const exchangeActivationCode = async (req, res, next) => {
     const productId = req.body?.productId;
     const code = normalizeCode(req.body?.code);
     const deviceId = String(req.body?.deviceId || '').trim();
-    if (!productId || !code || !deviceId) return res.status(400).json({ error: 'productId, code and deviceId are required' });
-    if (code.length !== 10 || deviceId.length < 8 || deviceId.length > 200) return res.status(400).json({ error: 'Invalid activation request' });
+    const machineFingerprint = String(
+      req.body?.machineFingerprint || ''
+    ).trim();
+
+    if (!productId || !code || !deviceId || !machineFingerprint) {
+      return res.status(400).json({
+        error: 'productId, code, deviceId and machineFingerprint are required'
+      });
+    }
+
+    if (
+      code.length !== 10 ||
+      deviceId.length < 8 ||
+      deviceId.length > 200 ||
+      machineFingerprint.length < 32 ||
+      machineFingerprint.length > 200
+    ) {
+      return res.status(400).json({
+        error: 'Invalid activation request'
+      });
+    }
 
     const product = await Product.findById(productId).lean();
-    if (!product || !product.app?.isApp) return res.status(404).json({ error: 'Application not found' });
 
-    const license = await License.findOne({ productId, activationCodeHash: hashSecret(code) });
-    if (!license) return res.status(401).json({ error: 'Invalid activation code' });
+    if (!product || !product.app?.isApp) {
+      return res.status(404).json({
+        error: 'Application not found'
+      });
+    }
+
+    const license = await License.findOne({
+      productId,
+      activationCodeHash: hashSecret(code)
+    });
+
+    if (!license) {
+      return res.status(401).json({
+        error: 'Invalid activation code'
+      });
+    }
+
     const now = new Date();
-    if (license.activationCodeConsumedAt || !license.activationCodeExpiresAt || license.activationCodeExpiresAt <= now) return res.status(401).json({ error: 'Activation code expired or already used' });
-    if (!['trial', 'active'].includes(license.status)) return res.status(403).json({ error: 'License is not active' });
 
-    if (license.deviceId && license.deviceId !== deviceId) return res.status(409).json({ error: 'License is already activated on another device' });
+    if (
+      license.activationCodeConsumedAt ||
+      !license.activationCodeExpiresAt ||
+      license.activationCodeExpiresAt <= now
+    ) {
+      return res.status(401).json({
+        error: 'Activation code expired or already used'
+      });
+    }
+
+    if (!['trial', 'active'].includes(license.status)) {
+      return res.status(403).json({
+        error: 'License is not active'
+      });
+    }
+
+    if (
+      license.deviceId &&
+      license.deviceId !== deviceId
+    ) {
+      return res.status(409).json({
+        error: 'License is already activated on another device'
+      });
+    }
 
     const deviceSecret = crypto.randomBytes(32).toString('hex');
+
     license.deviceId = deviceId;
+
     license.deviceSecretHash = hashSecret(deviceSecret);
+
+    // NEW: Bind license to this Windows installation.
+    license.machineFingerprintHash = hashSecret(machineFingerprint);
+
     license.deviceActivatedAt = now;
+
     license.activationCodeConsumedAt = now;
+
     license.activationCodeHash = null;
+
     license.activationCodeExpiresAt = null;
+
     license.lastValidatedAt = now;
+
     await license.save();
 
     return res.json({
       productId: product._id.toString(),
+
       status: license.status,
+
       serverTime: now.toISOString(),
+
       deviceSecret,
-      trial: license.status === 'trial' ? {
-        startedAt: license.trial?.startedAt || null,
-        expiresAt: license.trial?.expiresAt || null,
-      } : null,
-      license: license.status === 'active' ? { expiresAt: license.expiresAt || null, activatedAt: license.activatedAt || null } : null,
+
+      trial: license.status === 'trial'
+        ? {
+            startedAt:
+              license.trial?.startedAt || null,
+
+            expiresAt:
+              license.trial?.expiresAt || null,
+          }
+        : null,
+
+      license: license.status === 'active'
+        ? {
+            expiresAt:
+              license.expiresAt || null,
+
+            activatedAt:
+              license.activatedAt || null,
+          }
+        : null,
     });
-  } catch (err) { next(err); }
+
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getDeviceLicenseStatus = async (req, res, next) => {
   try {
     const productId = req.body?.productId;
-    const deviceId = String(req.body?.deviceId || '').trim();
-    const deviceSecret = String(req.body?.deviceSecret || '');
-    if (!productId || !deviceId || !deviceSecret) return res.status(400).json({ error: 'productId, deviceId and deviceSecret are required' });
 
-    const license = await License.findOne({ productId, deviceId });
-    if (!license || !license.deviceSecretHash || !safeEqualHex(hashSecret(deviceSecret), license.deviceSecretHash)) return res.status(401).json({ error: 'Invalid device credentials' });
+    const deviceId = String(
+      req.body?.deviceId || ''
+    ).trim();
+
+    const deviceSecret = String(
+      req.body?.deviceSecret || ''
+    );
+
+    const machineFingerprint = String(
+      req.body?.machineFingerprint || ''
+    ).trim();
+
+    if (
+      !productId ||
+      !deviceId ||
+      !deviceSecret ||
+      !machineFingerprint
+    ) {
+      return res.status(400).json({
+        error:
+          'productId, deviceId, deviceSecret and machineFingerprint are required'
+      });
+    }
+
+    if (
+      deviceId.length < 8 ||
+      deviceId.length > 200 ||
+      machineFingerprint.length < 32 ||
+      machineFingerprint.length > 200
+    ) {
+      return res.status(400).json({
+        error: 'Invalid device validation request'
+      });
+    }
+
+    const license = await License.findOne({
+      productId,
+      deviceId
+    });
+
+    if (
+      !license ||
+      !license.deviceSecretHash ||
+      !safeEqualHex(
+        hashSecret(deviceSecret),
+        license.deviceSecretHash
+      )
+    ) {
+      return res.status(401).json({
+        error: 'Invalid device credentials'
+      });
+    }
 
     const now = new Date();
-    if (license.status === 'trial' && license.trial?.expiresAt && license.trial.expiresAt <= now) license.status = 'expired';
-    if (license.status === 'active' && license.expiresAt && license.expiresAt <= now) license.status = 'expired';
+
+    const incomingFingerprintHash =
+      hashSecret(machineFingerprint);
+
+    /*
+     * Existing installations:
+     *
+     * Old licenses have no machine binding yet.
+     * After successful device credential validation,
+     * bind the current machine fingerprint.
+     */
+    if (!license.machineFingerprintHash) {
+
+      license.machineFingerprintHash =
+        incomingFingerprintHash;
+
+    } else if (
+      !safeEqualHex(
+        incomingFingerprintHash,
+        license.machineFingerprintHash
+      )
+    ) {
+
+      return res.status(423).json({
+        error: 'License is bound to another computer',
+        reason: 'machine_fingerprint_mismatch'
+      });
+    }
+
+    /*
+     * Expiry checks
+     */
+
+    if (
+      license.status === 'trial' &&
+      license.trial?.expiresAt &&
+      license.trial.expiresAt <= now
+    ) {
+      license.status = 'expired';
+    }
+
+    if (
+      license.status === 'active' &&
+      license.expiresAt &&
+      license.expiresAt <= now
+    ) {
+      license.status = 'expired';
+    }
+
     license.lastValidatedAt = now;
+
     await license.save();
 
-    return res.json(serializeLicense(license, now));
-  } catch (err) { next(err); }
+    return res.json(
+      serializeLicense(license, now)
+    );
+
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const transferDevice = async (req, res, next) => {
@@ -182,12 +368,14 @@ export const transferDevice = async (req, res, next) => {
 
     license.deviceId = null;
     license.deviceSecretHash = null;
+    license.machineFingerprintHash = null;
     license.deviceActivatedAt = null;
     license.activationCodeHash = null;
     license.activationCodeExpiresAt = null;
     license.activationCodeConsumedAt = null;
     license.lastValidatedAt = now;
     license.markModified('deviceId');
+    license.markModified('machineFingerprintHash');
     await license.save();
 
     return res.json({ productId: product._id.toString(), status: license.status, transferredAt: now.toISOString(), readyForActivation: true });
